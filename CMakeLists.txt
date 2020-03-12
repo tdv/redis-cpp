@@ -77,6 +77,7 @@ set(HEADERS
 
 set(SOURCES
     ${SOURCES}
+    src/redis-cpp/net/client.cpp
 )
 
 set(LIBRARIES

@@ -5,6 +5,8 @@
 #include "redis-cpp/core/protocol/resp/out.h"
 #include "redis-cpp/core/protocol/resp/in.h"
 
+#include "redis-cpp/net/client.h"
+
 template<typename ... T>
 struct overloaded
     : public T ...
@@ -19,6 +21,8 @@ int main()
 {
     try
     {
+        rediscpp::net::client client{"127.0.0.1", "6379"};
+
         std::stringstream os;
         auto &stream = os;
         put(stream, rediscpp::core::protocol::resp::out::simple_string{"This is a simple string!"});
