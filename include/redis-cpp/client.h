@@ -5,8 +5,8 @@
 //  Copyright (C) 2020 tdv
 //-------------------------------------------------------------------
 
-#ifndef __REDISCPP_NET_CLIENT_H__
-#define __REDISCPP_NET_CLIENT_H__
+#ifndef __REDISCPP_CLIENT_H__
+#define __REDISCPP_CLIENT_H__
 
 // STD
 #include <istream>
@@ -14,7 +14,7 @@
 #include <string_view>
 #include <memory>
 
-namespace rediscpp::net
+namespace rediscpp
 {
 
 class client final
@@ -31,6 +31,6 @@ private:
     std::unique_ptr<impl> impl_;
 };
 
-}   // namespace rediscpp::net
+}   // namespace rediscpp
 
-#endif  // !__REDISCPP_NET_CLIENT_H__
+#endif  // !__REDISCPP_CLIENT_H__

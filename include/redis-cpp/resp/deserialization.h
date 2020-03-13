@@ -5,8 +5,8 @@
 //  Copyright (C) 2020 tdv
 //-------------------------------------------------------------------
 
-#ifndef __REDISCPP_CORE_PROTOCOL_RESP_IN_H__
-#define __REDISCPP_CORE_PROTOCOL_RESP_IN_H__
+#ifndef __REDISCPP_RESP_DESERIALIZATION_H__
+#define __REDISCPP_RESP_DESERIALIZATION_H__
 
 // STD
 #include <cstdint>
@@ -19,13 +19,13 @@
 
 // REDIS-CPP
 
-#include "redis-cpp/core/protocol/resp/detail/marker.h"
+#include "redis-cpp/resp/detail/marker.h"
 
-namespace rediscpp::core::protocol
+namespace rediscpp
 {
 inline namespace resp
 {
-namespace in
+namespace deserialization
 {
 
 auto get_mark(std::istream &stream)
@@ -46,7 +46,7 @@ auto get_mark(std::istream &stream)
         break;
     }
     throw std::invalid_argument{
-            "[rediscpp::core::protocol::resp::in::get_mark] "
+            "[rediscpp::resp::deserialization::get_mark] "
             "Bad input format."
         };
 }
@@ -228,7 +228,7 @@ public:
                 break;
             default:
                 throw std::invalid_argument{
-                        "[rediscpp::core::protocol::resp::in::array] "
+                        "[rediscpp::resp::deserialization::array] "
                         "Bad input format. Unsupported value type."
                     };
             }
@@ -255,8 +255,8 @@ private:
     items_type items_;
 };
 
-}   // namespace serialization
+}   // namespace deserialization
 }   // namespace resp
-}   // namespace rediscpp::core::protocol
+}   // namespace rediscpp
 
-#endif  // !__REDISCPP_CORE_PROTOCOL_RESP_IN_H__
+#endif  // !__REDISCPP_RESP_DESERIALIZATION_H__

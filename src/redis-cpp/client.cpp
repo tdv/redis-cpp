@@ -12,9 +12,9 @@
 #include <boost/asio.hpp>
 
 // REDIS-CPP
-#include <redis-cpp/net/client.h>
+#include <redis-cpp/client.h>
 
-namespace rediscpp::net
+namespace rediscpp
 {
 
 class client::impl final
@@ -69,4 +69,4 @@ std::ostream& client::get_ostream()
     return impl_->get_ostream();
 }
 
-}   // namespace rediscpp::net
+}   // namespace rediscpp

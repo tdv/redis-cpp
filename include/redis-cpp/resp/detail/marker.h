@@ -5,10 +5,10 @@
 //  Copyright (C) 2020 tdv
 //-------------------------------------------------------------------
 
-#ifndef __REDISCPP_CORE_PROTOCOL_RESP_DETAIL_MARKER_H__
-#define __REDISCPP_CORE_PROTOCOL_RESP_DETAIL_MARKER_H__
+#ifndef __REDISCPP_RESP_DETAIL_MARKER_H__
+#define __REDISCPP_RESP_DETAIL_MARKER_H__
 
-namespace rediscpp::core::protocol
+namespace rediscpp
 {
 inline namespace resp
 {
@@ -26,6 +26,6 @@ constexpr auto lf = '\n';
 
 }   // namespace detail::marker
 }   // namespace resp
-}   // namespace rediscpp::core::protocol
+}   // namespace rediscpp
 
-#endif  // !__REDISCPP_CORE_PROTOCOL_RESP_DETAIL_MARKER_H__
+#endif  // !__REDISCPP_RESP_DETAIL_MARKER_H__

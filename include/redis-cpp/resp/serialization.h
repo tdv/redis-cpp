@@ -5,25 +5,28 @@
 //  Copyright (C) 2020 tdv
 //-------------------------------------------------------------------
 
-#ifndef __REDISCPP_CORE_PROTOCOL_RESP_OUT_H__
-#define __REDISCPP_CORE_PROTOCOL_RESP_OUT_H__
+#ifndef __REDISCPP_RESP_SERIALIZATION_H__
+#define __REDISCPP_RESP_SERIALIZATION_H__
 
 // STD
 #include <cstdint>
+#include <forward_list>
 #include <ostream>
 #include <string_view>
 #include <type_traits>
 #include <tuple>
+#include <variant>
 #include <utility>
 
 // REDIS-CPP
-#include "redis-cpp/core/protocol/resp/detail/marker.h"
+#include "redis-cpp/resp/detail/marker.h"
+#include "redis-cpp/resp/detail/overloaded.h"
 
-namespace rediscpp::core::protocol
+namespace rediscpp
 {
 inline namespace resp
 {
-namespace out
+namespace serialization
 {
 
 template <typename T>
@@ -78,7 +81,7 @@ class integer final
 public:
     static_assert(
             std::is_integral_v<std::decay_t<T>>,
-            "The class \"rediscpp::core::protocol::resp::out::integer\" "
+            "The class \"rediscpp::resp::serialization::integer\" "
             "has to be created only from an integral type."
         );
 
@@ -180,7 +183,7 @@ class null final
 public:
     void put(std::ostream &stream)
     {
-        out::put(stream, bulk_string{});
+        serialization::put(stream, bulk_string{});
     }
 };
 
@@ -189,33 +192,62 @@ class array final
 {
 public:
     array(T && ... values) noexcept
-        : values_{std::forward<T>(values) ... }
+        : values_{std::make_tuple(std::forward<T>(values) ... )}
+    {
+    }
+
+    using list_type = std::forward_list<std::string_view>;
+
+    array(list_type const &list)
+        : values_{list}
     {
     }
 
 
     void put(std::ostream &stream)
     {
-        stream << detail::marker::array
-               << std::tuple_size_v<decltype(values_)>
-               << detail::marker::cr
-               << detail::marker::lf;
+        std::visit(detail::overloaded{
+               [&stream] (tuple_type &values)
+               {
+                   stream << detail::marker::array
+                          << std::tuple_size_v<tuple_type>
+                          << detail::marker::cr
+                          << detail::marker::lf;
 
-        auto put_item = [&stream] (auto && arg)
-        {
-            out::put(stream, arg);
-        };
+                   auto put_item = [&stream] (auto && arg)
+                   {
+                       serialization::put(stream, arg);
+                   };
 
-        auto printer = [print = std::move(put_item)] (auto && ... args)
-        {
-            (print(args), ... );
-        };
+                   auto printer = [print = std::move(put_item)] (auto && ... args)
+                   {
+                       (print(args), ... );
+                   };
 
-        std::apply(std::move(printer), values_);
+                   std::apply(std::move(printer), values);
+                },
+                [&stream] (list_type &values)
+                {
+                    std::size_t count = 0;
+                    for (auto const &i : values)
+                        ++count;
+
+                    stream << detail::marker::array
+                           << count
+                           << detail::marker::cr
+                           << detail::marker::lf;
+
+                    for (auto const &i : values)
+                        serialization::put(stream, simple_string{i});
+                }
+            }, values_);
     }
 
 private:
-    std::tuple<std::decay_t<T> ... > values_;
+    using tuple_type = std::tuple<std::decay_t<T> ... >;
+    using holder_type = std::variant<tuple_type, list_type>;
+    holder_type values_;
+    //std::tuple<std::decay_t<T> ... > values_;
 };
 
 template <>
@@ -236,8 +268,8 @@ public:
     }
 };
 
-}    // namespace out
+}   // namespace serialization
 }   // namespace resp
-}   // namespace rediscpp::core::protocol
+}   // namespace rediscpp
 
-#endif  // !__REDISCPP_CORE_PROTOCOL_RESP_OUT_H__
+#endif  // !__REDISCPP_RESP_SERIALIZATION_H__
