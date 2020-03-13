@@ -229,7 +229,7 @@ public:
                 [&stream] (list_type &values)
                 {
                     std::size_t count = 0;
-                    for (auto const &i : values)
+                    for (auto i = std::begin(values) ; i != std::end(values) ; ++i)
                         ++count;
 
                     stream << detail::marker::array

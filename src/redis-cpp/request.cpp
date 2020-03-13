@@ -7,6 +7,7 @@
 
 // REDIS-CPP
 #include <redis-cpp/request.h>
+#include <redis-cpp/resp/serialization.h>
 
 namespace rediscpp
 {
@@ -15,9 +16,14 @@ request::request()
 {
 }
 
+std::string const request::data() const
+{
+    return {stream_.str()};
+}
+
 void request::pack_args(string_list const &args)
 {
-    //resp::serialization::array{args};
+    put(stream_, resp::serialization::array{args});
 }
 
 }   // namespace rediscpp

@@ -13,9 +13,6 @@
 #include <string_view>
 #include <forward_list>
 
-// REDIS-CPP
-#include <redis-cpp/resp/serialization.h>
-
 namespace rediscpp
 {
 
@@ -31,12 +28,7 @@ public:
                 "[rediscpp::request] All arguments of have to be convertable into std::string_view"
             );
 
-        pack_args({std::string_view{args} ... });
-
-        put(stream_, resp::serialization::array{
-                resp::serialization::bulk_string{std::move(name)},
-                resp::serialization::bulk_string{std::forward<TArgs>(args)} ...
-            });
+        pack_args({name, std::string_view{args} ... });
     }
 
     request(request const &) = delete;
@@ -45,10 +37,8 @@ public:
     request(request &&) = default;
     request& operator = (request &&) = default;
 
-    std::string_view const get_data() const
-    {
-        return {stream_.str()};
-    }
+    // TODO: change it for std::string_view
+    std::string const data() const;
 
 private:
     using string_list = std::forward_list<std::string_view>;
