@@ -9,10 +9,10 @@
 #define __REDISCPP_CLIENT_H__
 
 // STD
-#include <istream>
-#include <ostream>
-#include <string_view>
+#include <deque>
+#include <functional>
 #include <memory>
+#include <string_view>
 
 namespace rediscpp
 {
@@ -20,11 +20,14 @@ namespace rediscpp
 class client final
 {
 public:
-    client(std::string_view host, std::string_view port);
+    using buffer = std::deque<char>;
+    using on_data_func = std::function<void (buffer)>;
+
+    client(std::string_view host, std::string_view port,
+           on_data_func on_data = [](buffer){});
     ~client();
 
-    std::istream& get_istream();
-    std::ostream& get_ostream();
+    void post(std::string_view data);
 
 private:
     class impl;

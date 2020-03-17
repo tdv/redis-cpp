@@ -20,7 +20,9 @@ namespace rediscpp
 class client::impl final
 {
 public:
-    impl(std::string_view host, std::string_view port)
+    impl(std::string_view host, std::string_view port,
+         on_data_func on_data)
+        : on_data_{std::move(on_data)}
     {
         boost::asio::ip::tcp::resolver resolver{io_};
         resolver.resolve(host, port);
@@ -30,28 +32,18 @@ public:
     {
     }
 
-    std::istream& get_istream()
+    void post(std::string_view data)
     {
-        return istream_;
-    }
-
-    std::ostream& get_ostream()
-    {
-        return ostream_;
+        (void)data;
     }
 
 private:
+    on_data_func on_data_;
     boost::asio::io_context io_;
-
-    boost::asio::streambuf istreambuf_;
-    boost::asio::streambuf ostreambuf_;
-
-    std::istream istream_{&istreambuf_};
-    std::ostream ostream_{&ostreambuf_};
 };
 
-client::client(std::string_view host, std::string_view port)
-    : impl_{std::make_unique<impl>(std::move(host), std::move(port))}
+client::client(std::string_view host, std::string_view port, on_data_func on_data)
+    : impl_{std::make_unique<impl>(std::move(host), std::move(port), std::move(on_data))}
 {
 }
 
@@ -59,14 +51,8 @@ client::~client()
 {
 }
 
-std::istream& client::get_istream()
+void client::post(std::string_view data)
 {
-    return impl_->get_istream();
+    impl_->post(std::move(data));
 }
-
-std::ostream& client::get_ostream()
-{
-    return impl_->get_ostream();
-}
-
 }   // namespace rediscpp
