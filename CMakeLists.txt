@@ -79,7 +79,6 @@ set(HEADERS
 set(SOURCES
     ${SOURCES}
     src/redis-cpp/stream.cpp
-    src/redis-cpp/request.cpp
 )
 
 set(LIBRARIES

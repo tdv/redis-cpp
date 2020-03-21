@@ -6,43 +6,28 @@
 #include "redis-cpp/resp/deserialization.h"
 
 #include "redis-cpp/stream.h"
-#include "redis-cpp/request.h"
+#include "redis-cpp/response.h"
 
 int main()
 {
     try
     {
         auto stream = rediscpp::make_stream("localhost", "6379");
-        std::iostream &ios = *stream;
-        put(ios, rediscpp::resp::serialization::array{
-                rediscpp::resp::serialization::bulk_string{"set"},
-                rediscpp::resp::serialization::bulk_string{"my_key"},
-                rediscpp::resp::serialization::bulk_string{"my new value for my key"},
-                rediscpp::resp::serialization::bulk_string{"ex"},
-                rediscpp::resp::serialization::bulk_string{"60"}
-            });
 
-        std::flush(ios);
+        auto response = rediscpp::execute(*stream, "set", "my_key", "value for my_key", "ex", "60");
 
-        char ch = 0;
-        ios >> ch;
-        switch (ch)
+        if (response.is_error_message())
+            std::cerr << "Error: " << response.as_error_message() << std::endl;
+        else if (response.is_string())
+            std::cout << "Response: " << response.as_string() << std::endl;
+        else if (response.is_integer())
+            std::cout << "Response: " << response.as_integer() << std::endl;
+        else if (response.is_array())
         {
-        case '+' :
-            {
-            rediscpp::resp::deserialization::simple_string ss{ios};
-            std::cout << "Response: " << ss.get() << std::endl;
-            }
-            break;
-        case '-' :
-            {
-            rediscpp::resp::deserialization::error_message ss{ios};
-            std::cout << "Error: " << ss.get() << std::endl;
-            }
-            break;
-        default:
-            throw std::runtime_error{"Unsupported leading simbol."};
+            rediscpp::response resp{response.get()};
+            (void)resp;
         }
+
     }
     catch (std::exception const &e)
     {
