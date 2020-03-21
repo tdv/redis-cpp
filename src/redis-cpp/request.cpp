@@ -23,7 +23,7 @@ std::string const request::data() const
 
 void request::pack_args(string_list const &args)
 {
-    put(stream_, resp::serialization::array{args});
+    //put(stream_, resp::serialization::array{args});
 }
 
 }   // namespace rediscpp

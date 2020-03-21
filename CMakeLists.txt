@@ -31,6 +31,7 @@ set (BOOST_URL "https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_
 set (BOOST_LIBRARIES
     "thread"
     "system"
+    "iostreams"
 )
 
 set (BOOST_INSTALL_DIR ${THITD_PARTY_OUTPUT_PATH}/boost)
@@ -77,7 +78,7 @@ set(HEADERS
 
 set(SOURCES
     ${SOURCES}
-    src/redis-cpp/client.cpp
+    src/redis-cpp/stream.cpp
     src/redis-cpp/request.cpp
 )
 

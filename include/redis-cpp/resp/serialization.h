@@ -15,7 +15,6 @@
 #include <string_view>
 #include <type_traits>
 #include <tuple>
-#include <variant>
 #include <utility>
 
 // REDIS-CPP
@@ -196,58 +195,29 @@ public:
     {
     }
 
-    using list_type = std::forward_list<std::string_view>;
-
-    array(list_type const &list)
-        : values_{list}
-    {
-    }
-
-
     void put(std::ostream &stream)
     {
-        std::visit(detail::overloaded{
-               [&stream] (tuple_type &values)
-               {
-                   stream << detail::marker::array
-                          << std::tuple_size_v<tuple_type>
-                          << detail::marker::cr
-                          << detail::marker::lf;
+        stream << detail::marker::array
+               << std::tuple_size_v<tuple_type>
+               << detail::marker::cr
+               << detail::marker::lf;
 
-                   auto put_item = [&stream] (auto && arg)
-                   {
-                       serialization::put(stream, arg);
-                   };
+        auto put_item = [&stream] (auto && arg)
+        {
+            serialization::put(stream, arg);
+        };
 
-                   auto printer = [print = std::move(put_item)] (auto && ... args)
-                   {
-                       (print(args), ... );
-                   };
+        auto printer = [print = std::move(put_item)] (auto && ... args)
+        {
+            (print(args), ... );
+        };
 
-                   std::apply(std::move(printer), values);
-                },
-                [&stream] (list_type &values)
-                {
-                    std::size_t count = 0;
-                    for (auto i = std::begin(values) ; i != std::end(values) ; ++i)
-                        ++count;
-
-                    stream << detail::marker::array
-                           << count
-                           << detail::marker::cr
-                           << detail::marker::lf;
-
-                    for (auto const &i : values)
-                        serialization::put(stream, simple_string{i});
-                }
-            }, values_);
+        std::apply(std::move(printer), values_);
     }
 
 private:
     using tuple_type = std::tuple<std::decay_t<T> ... >;
-    using holder_type = std::variant<tuple_type, list_type>;
-    holder_type values_;
-    //std::tuple<std::decay_t<T> ... > values_;
+    std::tuple<std::decay_t<T> ... > values_;
 };
 
 template <>
