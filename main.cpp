@@ -6,7 +6,7 @@
 #include "redis-cpp/resp/deserialization.h"
 
 #include "redis-cpp/stream.h"
-#include "redis-cpp/response.h"
+#include "redis-cpp/value.h"
 
 int main()
 {
@@ -14,18 +14,18 @@ int main()
     {
         auto stream = rediscpp::make_stream("localhost", "6379");
 
-        auto response = rediscpp::execute(*stream, "set", "my_key", "value for my_key", "ex", "60");
+        auto value = rediscpp::execute(*stream, "set", "my_key", "value for my_key", "ex", "60");
 
-        if (response.is_error_message())
-            std::cerr << "Error: " << response.as_error_message() << std::endl;
-        else if (response.is_string())
-            std::cout << "Response: " << response.as_string() << std::endl;
-        else if (response.is_integer())
-            std::cout << "Response: " << response.as_integer() << std::endl;
-        else if (response.is_array())
+        if (value.is_error_message())
+            std::cerr << "Error: " << value.as_error_message() << std::endl;
+        else if (value.is_string())
+            std::cout << "Respojse: " << value.as_string() << std::endl;
+        else if (value.is_integer())
+            std::cout << "Response: " << value.as_integer() << std::endl;
+        else if (value.is_array())
         {
-            rediscpp::response resp{response.get()};
-            (void)resp;
+            rediscpp::value val{value.get()};
+            (void)val;
         }
 
     }

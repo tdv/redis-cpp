@@ -5,8 +5,8 @@
 //  Copyright (C) 2020 tdv
 //-------------------------------------------------------------------
 
-#ifndef __REDISCPP_RESPONSE_H__
-#define __REDISCPP_RESPONSE_H__
+#ifndef __REDISCPP_VALUE_H__
+#define __REDISCPP_VALUE_H__
 
 // STD
 #include <iosfwd>
@@ -20,12 +20,12 @@
 namespace rediscpp
 {
 
-class response final
+class value final
 {
 public:
     using item_type = resp::deserialization::array::item_type;
 
-    response(std::iostream &stream)
+    value(std::iostream &stream)
         : marker_{resp::deserialization::get_mark(stream)}
     {
         switch (marker_)
@@ -50,7 +50,7 @@ public:
         }
     }
 
-    response(item_type const &item)
+    value(item_type const &item)
         : marker_{resp::detail::marker::array}
         , item_{std::make_unique<item_type>(item)}
     {
@@ -64,7 +64,7 @@ public:
     item_type const& get() const
     {
         if (empty())
-            throw std::runtime_error{"Empty response."};
+            throw std::runtime_error{"Empty value."};
 
         return *item_;
     }
@@ -139,9 +139,9 @@ private:
                 {
                     throw std::bad_cast{};
                 },
-                [&result] (T const &value)
+                [&result] (T const &val)
                 {
-                    result = value.get();
+                    result = val.get();
                 }
             }, get());
 
@@ -168,9 +168,9 @@ inline auto execute(std::iostream &stream, std::string_view name, TArgs && ... a
 {
     execute_no_flush(stream, std::move(name), std::forward<TArgs>(args) ... );
     std::flush(stream);
-    return response{stream};
+    return value{stream};
 }
 
 }   // namespace rediscpp
 
-#endif  // !__REDISCPP_RESPONSE_H__
+#endif  // !__REDISCPP_VALUE_H__
