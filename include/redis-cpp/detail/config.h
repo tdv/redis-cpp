@@ -5,7 +5,11 @@
 //  Copyright (C) 2020 tdv
 //-------------------------------------------------------------------
 
-#ifndef REDISCPP_HEADER_ONLY
-#include <redis-cpp/stream.h>
-#include <redis-cpp/detail/stream.hpp>
-#endif  // !REDISCPP_HEADER_ONLY
+#ifndef REDISCPP_DETAIL_CONFIG_H_
+#define REDISCPP_DETAIL_CONFIG_H_
+
+#if __cplusplus < 201703L
+#error "RedisCpp. Requires C++ 17 or higher."
+#endif
+
+#endif  // !REDISCPP_DETAIL_CONFIG_H_

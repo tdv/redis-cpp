@@ -5,8 +5,11 @@
 //  Copyright (C) 2020 tdv
 //-------------------------------------------------------------------
 
-#ifndef __REDISCPP_RESP_DETAIL_MARKER_H__
-#define __REDISCPP_RESP_DETAIL_MARKER_H__
+#ifndef REDISCPP_RESP_DETAIL_MARKER_H_
+#define REDISCPP_RESP_DETAIL_MARKER_H_
+
+// REDIS-CPP
+#include <redis-cpp/detail/config.h>
 
 namespace rediscpp
 {
@@ -28,4 +31,4 @@ constexpr auto lf = '\n';
 }   // namespace resp
 }   // namespace rediscpp
 
-#endif  // !__REDISCPP_RESP_DETAIL_MARKER_H__
+#endif  // !REDISCPP_RESP_DETAIL_MARKER_H_

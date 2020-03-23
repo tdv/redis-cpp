@@ -5,8 +5,8 @@
 //  Copyright (C) 2020 tdv
 //-------------------------------------------------------------------
 
-#ifndef __REDISCPP_VALUE_H__
-#define __REDISCPP_VALUE_H__
+#ifndef REDISCPP_VALUE_H_
+#define REDISCPP_VALUE_H_
 
 // STD
 #include <iosfwd>
@@ -14,8 +14,9 @@
 #include <string_view>
 
 // REDIS-CPP
-#include <redis-cpp/resp/serialization.h>
+#include <redis-cpp/detail/config.h>
 #include <redis-cpp/resp/deserialization.h>
+#include <redis-cpp/resp/detail/overloaded.h>
 
 namespace rediscpp
 {
@@ -126,15 +127,47 @@ public:
                 get_value<std::string_view, resp::deserialization::bulk_string>();
     }
 
+    template <typename T>
+    operator T () const
+    {
+        return as<T>();
+    }
+
+    template <typename T>
+    T as() const
+    {
+        if (empty())
+            throw std::runtime_error{"Empty value."};
+        if (is_error_message())
+            throw std::runtime_error{std::string{as_error_message()}};
+        return T{get_value<std::decay_t<T>>()};
+    }
+
 private:
-    std::unique_ptr<item_type> item_;
     char marker_;
+    std::unique_ptr<item_type> item_;
+
+    template <typename T>
+    std::enable_if_t<std::is_integral_v<T>, T>
+    get_value() const
+    {
+        return static_cast<T>(as_integer());
+    }
+
+    template <typename T>
+    std::enable_if_t<
+            std::is_same_v<T, std::string_view> ||
+            std::is_same_v<T, std::string>, std::string_view>
+    get_value() const
+    {
+        return as_string();
+    }
 
     template <typename R, typename T>
     R get_value() const
     {
         R result;
-        std::visit(detail::overloaded{
+        std::visit(resp::detail::overloaded{
                 [] (auto const &)
                 {
                     throw std::bad_cast{};
@@ -149,28 +182,6 @@ private:
     }
 };
 
-template <typename ... TArgs>
-inline void execute_no_flush(std::iostream &stream, std::string_view name, TArgs && ... args)
-{
-    static_assert(
-            (std::is_convertible_v<TArgs, std::string_view> && ... && true),
-            "[rediscpp::execute] All arguments of have to be convertable into std::string_view"
-        );
-
-    put(stream, resp::serialization::array{
-            resp::serialization::bulk_string{std::move(name)},
-            resp::serialization::bulk_string{std::string_view{args}} ...
-        });
-}
-
-template <typename ... TArgs>
-inline auto execute(std::iostream &stream, std::string_view name, TArgs && ... args)
-{
-    execute_no_flush(stream, std::move(name), std::forward<TArgs>(args) ... );
-    std::flush(stream);
-    return value{stream};
-}
-
 }   // namespace rediscpp
 
-#endif  // !__REDISCPP_VALUE_H__
+#endif  // !REDISCPP_VALUE_H_

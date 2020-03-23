@@ -5,8 +5,8 @@
 //  Copyright (C) 2020 tdv
 //-------------------------------------------------------------------
 
-#ifndef __REDISCPP_RESP_DESERIALIZATION_H__
-#define __REDISCPP_RESP_DESERIALIZATION_H__
+#ifndef REDISCPP_RESP_DESERIALIZATION_H_
+#define REDISCPP_RESP_DESERIALIZATION_H_
 
 // STD
 #include <cstdint>
@@ -18,8 +18,8 @@
 #include <vector>
 
 // REDIS-CPP
-
-#include "redis-cpp/resp/detail/marker.h"
+#include <redis-cpp/detail/config.h>
+#include <redis-cpp/resp/detail/marker.h>
 
 namespace rediscpp
 {
@@ -259,4 +259,4 @@ private:
 }   // namespace resp
 }   // namespace rediscpp
 
-#endif  // !__REDISCPP_RESP_DESERIALIZATION_H__
+#endif  // !REDISCPP_RESP_DESERIALIZATION_H_

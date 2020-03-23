@@ -1,95 +1,73 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.12.0)
 
-include(ExternalProject)
+#-----------------------Options--------------------------------------
+option (REDISCPP_PURE_CORE "[REDISCPP] Only pure core" OFF)
+option (REDISCPP_HEADER_ONLY "[REDISCPP] Header only" OFF)
+#--------------------------------------------------------------------
 
-project(my_app)
+project(redis-cpp)
 set(PROJECT ${PROJECT_NAME})
 string(TOLOWER "${PROJECT}" PROJECT_LC)
 
+if (REDISCPP_PURE_CORE)
+    set (REDISCPP_DEFINES "${REDISCPP_DEFINES} -DREDISCPP_PURE_CORE")
+endif()
+
+if (REDISCPP_HEADER_ONLY)
+    set (REDISCPP_DEFINES "${REDISCPP_DEFINES} -DREDISCPP_HEADER_ONLY")
+endif()
+
 set (STD_CXX "c++17")
 
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/MyCMakeScripts)
-set (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=${STD_CXX}")
-set (CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
+
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall ${REDISCPP_DEFINES} -std=${STD_CXX}")
+set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -W -Wall ${REDISCPP_DEFINES} -std=${STD_CXX} -DNDEBUG")
 set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 #---------------------------------------------------------
 
-#---------------------Third party common -----------------
+if (NOT REDISCPP_PURE_CORE)
 
-set (THITD_PARTY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/third_party)
-set (THIRD_PARTY_PROJECTS "")
-set (LIBRARIES "")
+    find_package(Boost 1.67.0 REQUIRED COMPONENTS thread system iostreams)
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
 
-set (BOOST_URL "https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz")
-
-
-#------------------------ Boost --------------------------
-set (BOOST_LIBRARIES
-    "thread"
-    "system"
-    "iostreams"
-)
-
-set (BOOST_INSTALL_DIR ${THITD_PARTY_OUTPUT_PATH}/boost)
-set (BOOST_INCLUDE_DIR ${BOOST_INSTALL_DIR}/include)
-set (BOOST_LIBRARIES_DIR ${BOOST_INSTALL_DIR}/lib)
-include_directories (SYSTEM ${BOOST_INCLUDE_DIR})
-link_directories(${BOOST_LIBRARIES_DIR})
-
-set (BOOST_PROJECT "boost-project")
-list (APPEND THIRD_PARTY_PROJECTS ${BOOST_PROJECT})
-
-foreach (lib ${BOOST_LIBRARIES})
-    if (DEFINED BOOST_LIBRARIES_LIST)
-        set (BOOST_LIBRARIES_LIST "${BOOST_LIBRARIES_LIST},")
-    endif()
-    set (BOOST_LIBRARIES_LIST "${BOOST_LIBRARIES_LIST}${lib}")
-endforeach()
-
-ExternalProject_Add(${BOOST_PROJECT}
-        URL ${BOOST_URL}
-        UPDATE_COMMAND ""
-        BUILD_IN_SOURCE 1
-        CONFIGURE_COMMAND ./bootstrap.sh --prefix=${BOOST_INSTALL_DIR} --with-libraries=${BOOST_LIBRARIES_LIST} --without-icu
-        BUILD_COMMAND ./b2 install -j8 --disable-icu --ignore-site-config "cxxflags=-std=${STD_CXX} -fPIC" link=static threading=multi runtime-link=static
-        INSTALL_COMMAND ""
-        LOG_DOWNLOAD 1
-        LOG_UPDATE 1
-        LOG_CONFIGURE 1
-        LOG_BUILD 1
-        LOG_TEST 1
-        LOG_INSTALL 1
+    set (LIBRARIES
+        ${LIBRARIES}
+        ${Boost_LIBRARIES}
     )
 
-foreach (lib ${BOOST_LIBRARIES})
-    list (APPEND LIBRARIES boost_${lib})
-endforeach()
-#---------------------------------------------------------
+endif()
 
 
-set(HEADERS
-    ${HEADERS}
-    ${COMMON_HEADERS}
-)
-
-set(SOURCES
-    ${SOURCES}
-    src/redis-cpp/stream.cpp
-)
-
-set(LIBRARIES
-    ${LIBRARIES}
-    pthread
-    rt
-)
+if (NOT REDISCPP_HEADER_ONLY)
+    set(SOURCES
+        ${SOURCES}
+        src/redis-cpp/stream.cpp
+    )
+endif()
 
 include_directories (include)
-include_directories (${HEADERS})
+if (NOT REDISCPP_HEADER_ONLY)
+    add_library (${PROJECT_LC} STATIC ${SOURCES})
+    target_link_libraries (${PROJECT_LC} ${LIBRARIES})
+endif()
 
-add_executable(${PROJECT_LC} ${HEADERS} ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-target_link_libraries(${PROJECT_LC} ${LIBRARIES})
-add_dependencies (${PROJECT_LC} ${THIRD_PARTY_PROJECTS})
+set (LIBRARIES
+        ${PROJECT_LC}
+        ${LIBRARIES}
+    )
+
+install(DIRECTORY include/${PROJECT_LC} DESTINATION include)
+
+if (NOT REDISCPP_HEADER_ONLY AND NOT REDISCPP_PURE_CORE)
+    install (TARGETS ${PROJECT_LC} EXPORT ${PROJECT_LC}
+                 ARCHIVE DESTINATION lib
+    )
+endif()
