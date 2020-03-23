@@ -20,8 +20,6 @@ namespace rediscpp
 {
 namespace detail
 {
-namespace
-{
 
 class tcp_stream_device final
 {
@@ -99,7 +97,6 @@ private:
     std::unique_ptr<stream_type> stream_;
 };
 
-}   // namespace
 }   // namespace detail
 
 #ifdef REDISCPP_HEADER_ONLY
