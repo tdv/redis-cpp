@@ -1,17 +1,24 @@
+//-------------------------------------------------------------------
+//  redis-cpp
+//  https://github.com/tdv/redis-cpp
+//  Created:     03.2020
+//  Copyright (C) 2020 tdv
+//-------------------------------------------------------------------
+
 // STD
 #include <cstdlib>
 #include <iostream>
 
-#include "redis-cpp/stream.h"
-#include "redis-cpp/execute.h"
+#include <redis-cpp/stream.h>
+#include <redis-cpp/execute.h>
 
 int main()
 {
     try
     {
         auto stream = rediscpp::make_stream("localhost", "6379");
-        auto value = rediscpp::execute(*stream, "ping");
-        std::cout << "Response: " << value.as<std::string>() << std::endl;
+        auto response = rediscpp::execute(*stream, "ping");
+        std::cout << response.as<std::string>() << std::endl;
     }
     catch (std::exception const &e)
     {
