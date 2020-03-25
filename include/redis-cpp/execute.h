@@ -22,7 +22,7 @@ namespace rediscpp
 {
 
 template <typename ... TArgs>
-inline void execute_no_flush(std::iostream &stream, std::string_view name, TArgs && ... args)
+inline void execute_no_flush(std::ostream &stream, std::string_view name, TArgs && ... args)
 {
     static_assert(
             (std::is_convertible_v<TArgs, std::string_view> && ... && true),

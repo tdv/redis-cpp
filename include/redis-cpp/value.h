@@ -26,7 +26,7 @@ class value final
 public:
     using item_type = resp::deserialization::array::item_type;
 
-    value(std::iostream &stream)
+    value(std::istream &stream)
         : marker_{resp::deserialization::get_mark(stream)}
     {
         switch (marker_)
