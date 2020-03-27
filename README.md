@@ -1,11 +1,11 @@
 # redis-cpp - lightweight library in C++ 17 for executing Redis commands
-Redis-Cpp is a library in C++ for executing Redis commands with supportive of the pipelines and publish / subscribe pattern. Moreover, you can extend the library by your own stream implementation to communicate with Redis or  use the library only likeRESP protocol serializer.  
+Redis-Cpp is a library in C++ for executing Redis commands with supportive of the pipelines and publish / subscribe pattern. Moreover, you can extend the library by your own stream implementation to communicate with Redis or  use the library only like RESP protocol serializer.  
 You can know only a couple functions to start to work with Rides through the library.  
 ```cpp
+// Connect to server
 auto stream = rediscpp::make_stream("localhost", "6379");
-std::cout <<
-    rediscpp::execute(*stream, "ping").as<std::string>()
-    << std::endl;
+// Execute command
+std::cout << rediscpp::execute(*stream, "ping").as<std::string>() << std::endl;
 ```
 And you will dive deeper if you feel the necessity.  
 
@@ -18,7 +18,7 @@ And you will dive deeper if you feel the necessity.
 - publish / subscribe
 - pure core in C++ for RESP
 - extensible transport
-- header only library if necessary
+- header only library if it's necessary
 - minimal dependencies
 - different levels of use  
 
