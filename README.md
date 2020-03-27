@@ -1,5 +1,5 @@
-# redis-cpp - lightweight client library in C++ 17 for executing Redis commands
-Redis-Cpp is a library in C++ for executing Redis commands with supportive of the pipelines and publish / subscribe pattern. Moreover, you can extend the library by your own stream implementation to communicate with Redis or  use the library only like RESP protocol serializer.  
+# redis-cpp - lightweight C++ client library for Redis
+Redis-Cpp is a library in C++17 for executing Redis commands with support of the pipelines and publish / subscribe pattern. Moreover, you can extend the library by your own stream implementation to communicate with Redis. Alse, you can use it like RESP serializer (pure core).  
 You can know only a couple functions to start to work with Rides through the library.  
 ```cpp
 // Connect to server
@@ -16,15 +16,15 @@ And you will dive deeper if you feel the necessity.
 - easy way to access Redis
 - pipelines
 - publish / subscribe
-- pure core in C++ for RESP
+- pure core in C++ for the RESP
 - extensible transport
 - header only library if it's necessary
 - minimal dependencies
-- different levels of use  
+- various levels of usage  
 
 
 # Compiler and OS
-It has been tested  by gcc 9.2.1 within Ubuntu 19.10
+It has compiled and tested within gcc 9.2.1 on Ubuntu 19.10.  
 You might try other compiler or OS.  
 
 **NOTE**  
@@ -35,7 +35,7 @@ All code is cross-platform.
 
 # Build and install
 
-## Clone and build with installed Boost  
+## Build and install  
 ```bash
 git clone https://github.com/tdv/redis-cpp.git  
 cd redis-cpp
@@ -45,8 +45,8 @@ cmake ..
 make  
 make install  
 ```
-You can try using CMAKE_INSTALL_PREFIX to select the installation directory  
-Moreover, you can use cmake options to configure like header only or pure core.  
+You can use CMAKE_INSTALL_PREFIX to select the particular installation directory  
+Moreover, you can use cmake options to configure library like header only or pure core library.  
 Instead of cmake options, you can define REDISCPP_HEADER_ONLY and use the library like header only library without any cmake file.  
 
 **NOTE**  
@@ -55,10 +55,19 @@ Redis-Cpp has two build options
 - Header only  
 
 Use cmake -D with REDISCPP_HEADER_ONLY or REDISCPP_PURE_CORE. You can enable both options at the same time.  
-The 'pure core' build you can use with your own transport.  
+You can use your own transport with the 'pure core' option.  
+
+If you need to use the library like header only library, you can copy the folder redis-cpp from include/redis-cpp in your project and define the macro REDISCPP_HEADER_ONLY before including redis-cpp headers according to the code below
+```cpp
+#define REDISCPP_HEADER_ONLY
+#include <redis-cpp/stream.h>
+#include <redis-cpp/execute.h>
+
+// Include something else
+```
 
 ## Build examples
-### Build examples with installed boost 
+### Build examples 
 ```bash
 cd examples/{example_project}
 mkdir build  
@@ -70,7 +79,7 @@ make
 # Examples
 
 **NOTE**  
-Look at the redis-docker folder to get all what you need to start to test redis-cpp. There are files to build and run Redis server in Docker.  
+Look at the redis-docker folder to get all what you need to start testing redis-cpp. There are files to build and run Redis server in Docker.  
 
 ## Ping
 [Source code](https://github.com/tdv/redis-cpp/tree/master/examples/ping)  
@@ -145,7 +154,7 @@ int main()
 ## Pipeline
 [Source code](https://github.com/tdv/redis-cpp/tree/master/examples/pipeline)  
 **Description**  
-It's more complicated example which demonstrates how to use a pipeline within Redis to reach a better performance.  
+It's a more complicated example which demonstrates how to use a pipeline within Redis to reach a better performance.  
 
 ```cpp
 // STD
@@ -213,7 +222,7 @@ int main()
 ## Resp
 [Source code](https://github.com/tdv/redis-cpp/tree/master/examples/resp)  
 **Description**  
-The "Resp" example demonstrates a basic RESP serialization with Redis-Cpp without communication with Redis server. It's only an exampe to show how to user RESP serialization with redis-cpp librarry.  
+The "Resp" example demonstrates a basic RESP serialization with Redis-Cpp without communication with Redis server. It's only an exampe to show how to use RESP serialization with redis-cpp librarry.  
 ```cpp
 // STD
 #include <cstdlib>
@@ -297,7 +306,7 @@ int main()
 ## Publish / Subscribe
 [Source code](https://github.com/tdv/redis-cpp/tree/master/examples/pubsub)  
 **Description**  
-This is the most complicated example within redis-cpp which demonstrates how to publicate messages and make subscription onto a queue. In the example a publisher and subscriber are located in one process, each with its own stream to communicate with Redis. Usually, in real projects the publisher and subscriber are not located in one process.  
+This is a more complicated example within redis-cpp which demonstrates how to publicate messages and make subscription onto a queue. In the example a publisher and subscriber locate in one process, each one has its own stream to communicate with Redis. Usually, in real projects the publisher and subscriber are not located in one process.  
 
 ```cpp
 // STD
@@ -405,6 +414,6 @@ int main()
 ```  
 
 # Conclusion  
-Take a look above one more time. I hope there's you could find something useful for your own projects with Redis. I'd thought to add one more level to wrap all Redis commands and refused this idea. There're a lot of an useless work with a small outcome, because, in many cases we need to run only a handful of commands. Maybe it'll be a good idea in the future, and not now. Now you can use redis-cpp like lightweight library to execute Redis commands and get results  with minimal effort.  
+Take a look above one more time. I hope there's you could find something useful for your own projects with Redis. I'd thought to add one more level to wrap all Redis commands and refused this idea. A lot of the useless work with a small outcome, because, in many cases we need to run only a handful of commands. Maybe it'll be a good idea in the future. Now you can use redis-cpp like lightweight library to execute Redis commands and get results  with minimal effort.  
 
 **Enjoy your own projects with Redis!**  
