@@ -28,6 +28,7 @@ inline namespace resp
 namespace deserialization
 {
 
+[[nodiscard]]
 auto get_mark(std::istream &stream)
 {
     switch (stream.get())
@@ -52,6 +53,7 @@ auto get_mark(std::istream &stream)
 }
 
 template <typename T>
+[[nodiscard]]
 T get(std::istream &stream)
 {
     return {stream};
@@ -65,6 +67,7 @@ public:
         std::getline(stream, value_);
     }
 
+    [[nodiscard]]
     std::string_view get() const noexcept
     {
         return value_;
@@ -82,6 +85,7 @@ public:
         std::getline(stream, value_);
     }
 
+    [[nodiscard]]
     std::string_view get() const noexcept
     {
         return value_;
@@ -101,6 +105,7 @@ public:
         value_ = std::stoll(string);
     }
 
+    [[nodiscard]]
     std::int64_t get() const noexcept
     {
         return value_;
@@ -127,21 +132,25 @@ public:
         std::getline(stream, string);
     }
 
+    [[nodiscard]]
     bool is_null() const noexcept
     {
         return is_null_;
     }
 
+    [[nodiscard]]
     std::string_view get() const noexcept
     {
         return {std::data(data_), std::size(data_)};
     }
 
+    [[nodiscard]]
     std::size_t size() const noexcept
     {
         return std::size(data_);
     }
 
+    [[nodiscard]]
     char const* data() const noexcept
     {
         return std::data(data_);
@@ -161,11 +170,13 @@ public:
     {
     }
 
+    [[nodiscard]]
     bool is_null() const noexcept
     {
         return data_.is_null();
     }
 
+    [[nodiscard]]
     std::string_view get() const noexcept
     {
         return data_.get();
@@ -235,16 +246,19 @@ public:
         }
     }
 
+    [[nodiscard]]
     bool is_null() const noexcept
     {
         return is_null_;
     }
 
+    [[nodiscard]]
     std::size_t size() const noexcept
     {
         return std::size(items_);
     }
 
+    [[nodiscard]]
     items_type const& get() const noexcept
     {
         return items_;

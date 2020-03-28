@@ -36,6 +36,7 @@ inline void execute_no_flush(std::ostream &stream, std::string_view name, TArgs 
 }
 
 template <typename ... TArgs>
+[[nodiscard]]
 inline auto execute(std::iostream &stream, std::string_view name, TArgs && ... args)
 {
     execute_no_flush(stream, std::move(name), std::forward<TArgs>(args) ... );

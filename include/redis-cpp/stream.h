@@ -21,6 +21,7 @@
 namespace rediscpp
 {
 
+[[nodiscard]]
 std::shared_ptr<std::iostream> make_stream(
         std::string_view host, std::string_view port);
 

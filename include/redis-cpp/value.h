@@ -57,11 +57,13 @@ public:
     {
     }
 
+    [[nodiscard]]
     bool empty() const noexcept
     {
         return !item_.operator bool();
     }
 
+    [[nodiscard]]
     item_type const& get() const
     {
         if (empty())
@@ -70,56 +72,67 @@ public:
         return *item_;
     }
 
+    [[nodiscard]]
     bool is_simple_string() const noexcept
     {
         return marker_ == resp::detail::marker::simple_string;
     }
 
+    [[nodiscard]]
     bool is_error_message() const noexcept
     {
         return marker_ == resp::detail::marker::error_message;
     }
 
+    [[nodiscard]]
     bool is_bulk_string() const noexcept
     {
         return marker_ == resp::detail::marker::bulk_string;
     }
 
+    [[nodiscard]]
     bool is_integer() const noexcept
     {
         return marker_ == resp::detail::marker::integer;
     }
 
+    [[nodiscard]]
     bool is_array() const noexcept
     {
         return marker_ == resp::detail::marker::array;
     }
 
+    [[nodiscard]]
     bool is_string() const noexcept
     {
         return is_simple_string() || is_bulk_string();
     }
 
+    [[nodiscard]]
     auto as_error_message() const
     {
         return get_value<std::string_view, resp::deserialization::error_message>();
     }
 
+    [[nodiscard]]
     auto as_simple_string() const
     {
         return get_value<std::string_view, resp::deserialization::simple_string>();
     }
 
+    [[nodiscard]]
     auto as_integer() const
     {
         return get_value<std::int64_t, resp::deserialization::integer>();
     }
 
+    [[nodiscard]]
     auto as_bulk_string() const
     {
         return get_value<std::string_view, resp::deserialization::bulk_string>();
     }
 
+    [[nodiscard]]
     auto as_string() const
     {
         return is_simple_string() ?
@@ -134,6 +147,7 @@ public:
     }
 
     template <typename T>
+    [[nodiscard]]
     T as() const
     {
         if (empty())
@@ -169,13 +183,9 @@ private:
         R result;
         std::visit(resp::detail::overloaded{
                 [] (auto const &)
-                {
-                    throw std::bad_cast{};
-                },
+                { throw std::bad_cast{}; },
                 [&result] (T const &val)
-                {
-                    result = val.get();
-                }
+                { result = val.get(); }
             }, get());
 
         return result;

@@ -32,6 +32,7 @@ public:
     {
     }
 
+    [[nodiscard]]
     std::streamsize read(char *s, std::streamsize n)
     {
         boost::system::error_code ec;
@@ -47,6 +48,7 @@ public:
             throw boost::system::system_error(ec, "read_some");
     }
 
+    [[nodiscard]]
     std::streamsize write(char const *s, std::streamsize n)
     {
         boost::system::error_code ec;
@@ -84,6 +86,7 @@ public:
         stream_ = std::make_unique<stream_type>(socket_);
     }
 
+    [[nodiscard]]
     std::iostream* get_stream()
     {
         return stream_.get();
