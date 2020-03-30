@@ -35,7 +35,6 @@ All code is a cross-platform code.
 
 # Build and install
 
-## Build and install  
 ```bash
 git clone https://github.com/tdv/redis-cpp.git  
 cd redis-cpp
