@@ -34,7 +34,7 @@ All code is a cross-platform code.
 - Boost (only for using with built-in implementation of transport).  
 
 # Build and install
-
+## Build library
 ```bash
 git clone https://github.com/tdv/redis-cpp.git  
 cd redis-cpp
@@ -66,7 +66,6 @@ If you need to use the library like header-only library, you can copy the folder
 ```
 
 ## Build examples
-### Build examples 
 ```bash
 cd examples/{example_project}
 mkdir build  
