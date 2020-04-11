@@ -1,5 +1,5 @@
 # redis-cpp - lightweight C++ client library for Redis
-redis-cpp is a library in C++17 for executing Redis commands with support of the pipelines and publish / subscribe pattern. Moreover, you can extend the library by your own stream implementation to communicate with Redis. Alse, you can use it like RESP serializer (pure core).  
+redis-cpp is a library in C++17 for executing Redis [commands](https://redis.io/commands) with support of the pipelines and publish / subscribe pattern. Moreover, you can extend the library by your own stream implementation to communicate with Redis. Alse, you can use it like RESP serializer (pure core).  
 You can know only a couple functions to start to work with Rides through the library.  
 ```cpp
 // Connect to server
