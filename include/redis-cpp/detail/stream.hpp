@@ -72,15 +72,19 @@ private:
 class stream final
 {
 public:
-    stream(std::string_view host, std::string_view port)
+    stream(const char* host, int port)
     {
         boost::asio::ip::tcp::resolver resolver{io_context_};
-        auto endpoints = resolver.resolve(std::move(host), std::move(port));
+
+        //resolver.resolve() is deprecated
+        /*auto endpoints = resolver.resolve(std::move(host), std::move(port));
         auto iter = std::begin(endpoints);
         if (iter == std::end(endpoints))
-            throw std::runtime_error{"There is no any endpoint."};
+            throw std::runtime_error{"There is no any endpoint."};*/
 
-        socket_.connect(iter->endpoint());
+        boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address::from_string(host), port);
+
+        socket_.connect(endpoint);
         socket_.set_option(boost::asio::ip::tcp::no_delay{});
 
         stream_ = std::make_unique<stream_type>(socket_);
@@ -105,10 +109,10 @@ private:
 #ifdef REDISCPP_HEADER_ONLY
 inline
 #endif  // !REDISCPP_HEADER_ONLY
-std::shared_ptr<std::iostream> make_stream(std::string_view host,
-                                           std::string_view port)
+std::shared_ptr<std::iostream> make_stream(char* host,
+                                           int port)
 {
-    auto stream = std::make_shared<detail::stream>(std::move(host), std::move(port));
+    auto stream = std::make_shared<detail::stream>(host, port);
     return std::shared_ptr<std::iostream>{stream, stream->get_stream()};
 }
 
