@@ -74,13 +74,24 @@ class stream final
 public:
     stream(std::string_view host, std::string_view port)
     {
-        boost::asio::ip::tcp::resolver resolver{io_context_};
-        auto endpoints = resolver.resolve(std::move(host), std::move(port));
-        auto iter = std::begin(endpoints);
-        if (iter == std::end(endpoints))
-            throw std::runtime_error{"There is no any endpoint."};
-
-        socket_.connect(iter->endpoint());
+#ifndef REDISCPP_EASY_ADDRESS_RESOLVE
+        auto get_endpoint = [this, host, port]
+            {
+                boost::asio::ip::tcp::resolver resolver{io_context_};
+                auto endpoints = resolver.resolve(std::move(host), std::move(port));
+                auto iter = std::begin(endpoints);
+                if (iter == std::end(endpoints))
+                    throw std::runtime_error{"There is no any endpoint."};
+                return iter->endpoint();
+            };
+#else
+        auto get_endpoint = [host, port] () -> boost::asio::ip::tcp::endpoint
+            {
+                return {boost::asio::ip::address::from_string(host.data()),
+                    static_cast<std::uint16_t>(std::atoi(port.data()))};
+            };
+#endif  // !REDISCPP_EASY_ADDRESS_RESOLVE
+        socket_.connect(get_endpoint());
         socket_.set_option(boost::asio::ip::tcp::no_delay{});
 
         stream_ = std::make_unique<stream_type>(socket_);

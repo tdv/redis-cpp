@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.12.0)
 #-----------------------Options--------------------------------------
 option (REDISCPP_PURE_CORE "[REDISCPP] Only pure core" OFF)
 option (REDISCPP_HEADER_ONLY "[REDISCPP] Header only" OFF)
+option (REDISCPP_EASY_ADDRESS_RESOLVE "[REDISCPP] Use easy address resolving" OFF)
 #--------------------------------------------------------------------
 
 project(redis-cpp)
@@ -15,6 +16,10 @@ endif()
 
 if (REDISCPP_HEADER_ONLY)
     set (REDISCPP_DEFINES "${REDISCPP_DEFINES} -DREDISCPP_HEADER_ONLY")
+endif()
+
+if (REDISCPP_EASY_ADDRESS_RESOLVE)
+    set(REDISCPP_DEFINES, "${REDISCPP_DEFINES} -DREDISCPP_EASY_ADDRESS_RESOLVE")
 endif()
 
 set (STD_CXX "c++17")
