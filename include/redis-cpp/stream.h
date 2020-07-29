@@ -2,7 +2,9 @@
 //  redis-cpp
 //  https://github.com/tdv/redis-cpp
 //  Created:     03.2020
-//  Copyright (C) 2020 tdv
+//  Copyright 2020 Dmitry Tkachenko (tkachenkodmitryv@gmail.com)
+//  Distributed under the MIT License
+//  (See accompanying file LICENSE)
 //-------------------------------------------------------------------
 
 #ifndef REDISCPP_STREAM_H_
