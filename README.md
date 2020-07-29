@@ -23,6 +23,9 @@ And you will dive deeper if you feel the necessity.
 - various levels of usage  
 
 
+# License
+Distributed under the MIT License
+
 # Compiler and OS
 This has compiled and tested within gcc 9.2.1 on Ubuntu 19.10.  
 You might try other compiler or OS.  
