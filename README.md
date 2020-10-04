@@ -9,6 +9,9 @@ std::cout << rediscpp::execute(*stream, "ping").as<std::string>() << std::endl;
 ```
 And you will dive deeper if you feel the necessity.  
 
+**NOTE**  
+If you need a c++11 version you could switch to c++11 branch and use the one.  
+
 # Version
 1.0.0  
 
