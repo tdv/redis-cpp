@@ -12,32 +12,36 @@
 #include <iostream>
 #include <sstream>
 
+// BOOST
+#include <boost/variant/apply_visitor.hpp>
+
+// REDIS-CPP
 #include <redis-cpp/execute.h>
 
 namespace resps = rediscpp::resp::serialization;
 namespace respds = rediscpp::resp::deserialization;
 
-auto make_sample_data()
+std::string make_sample_data()
 {
     std::ostringstream stream;
 
-    put(stream, resps::array{
+    put(stream, resps::make_array(
             resps::simple_string{"This is a simple string."},
             resps::error_message{"This is an error message."},
             resps::bulk_string{"This is a bulk string."},
-            resps::integer{100500},
-            resps::array{
+            resps::integer<std::size_t>{100500},
+            resps::make_array(
                 resps::simple_string("This is a simple string in a nested array."),
                 resps::bulk_string("This is a bulk string in a nested array.")
-            }
-        });
+            )
+        ));
 
     return stream.str();
 }
 
 void print_value(respds::array::item_type const &value, std::ostream &stream)
 {
-    std::visit(rediscpp::resp::detail::overloaded{
+    boost::apply_visitor(rediscpp::resp::detail::make_visitor(
             [&stream] (respds::simple_string const &val)
             { stream << "Simple string: " << val.get() << std::endl; },
             [&stream] (respds::error_message const &val)
@@ -52,10 +56,8 @@ void print_value(respds::array::item_type const &value, std::ostream &stream)
                 for (auto const &i : val.get())
                     print_value(i, stream);
                 stream << "-----------------" << std::endl;
-            },
-            [&stream] (auto const &)
-            { stream << "Unexpected value type." << std::endl; }
-        }, value);
+            }
+        ), value);
 }
 
 void print_sample_data(std::istream &istream, std::ostream &ostream)

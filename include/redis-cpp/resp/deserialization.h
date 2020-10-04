@@ -15,9 +15,11 @@
 #include <istream>
 #include <stdexcept>
 #include <string>
-#include <string_view>
-#include <variant>
+#include <string>
 #include <vector>
+
+// BOOST
+#include <boost/variant.hpp>
 
 // REDIS-CPP
 #include <redis-cpp/detail/config.h>
@@ -31,7 +33,7 @@ namespace deserialization
 {
 
 [[nodiscard]]
-auto get_mark(std::istream &stream)
+char get_mark(std::istream &stream)
 {
     switch (stream.get())
     {
@@ -70,7 +72,7 @@ public:
     }
 
     [[nodiscard]]
-    std::string_view get() const noexcept
+    std::string const& get() const noexcept
     {
         return value_;
     }
@@ -88,7 +90,7 @@ public:
     }
 
     [[nodiscard]]
-    std::string_view get() const noexcept
+    std::string const& get() const noexcept
     {
         return value_;
     }
@@ -141,21 +143,21 @@ public:
     }
 
     [[nodiscard]]
-    std::string_view get() const noexcept
+    std::string get() const noexcept
     {
-        return {std::data(data_), std::size(data_)};
+        return {data_.data(), data_.size()};
     }
 
     [[nodiscard]]
     std::size_t size() const noexcept
     {
-        return std::size(data_);
+        return data_.size();
     }
 
     [[nodiscard]]
     char const* data() const noexcept
     {
-        return std::data(data_);
+        return data_.data();
     }
 
 private:
@@ -179,7 +181,7 @@ public:
     }
 
     [[nodiscard]]
-    std::string_view get() const noexcept
+    std::string get() const noexcept
     {
         return data_.get();
     }
@@ -199,7 +201,7 @@ public:
 class array final
 {
 public:
-    using item_type = std::variant<
+    using item_type = boost::variant<
             simple_string,
             error_message,
             integer,
@@ -257,7 +259,7 @@ public:
     [[nodiscard]]
     std::size_t size() const noexcept
     {
-        return std::size(items_);
+        return items_.size();
     }
 
     [[nodiscard]]

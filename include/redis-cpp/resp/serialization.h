@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <forward_list>
 #include <ostream>
-#include <string_view>
+#include <string>
 #include <type_traits>
 #include <tuple>
 #include <utility>
@@ -22,7 +22,7 @@
 // REDIS-CPP
 #include <redis-cpp/detail/config.h>
 #include <redis-cpp/resp/detail/marker.h>
-#include <redis-cpp/resp/detail/overloaded.h>
+#include <redis-cpp/resp/detail/visitor.h>
 
 namespace rediscpp
 {
@@ -40,12 +40,12 @@ void put(std::ostream &stream, T &&value)
 class simple_string final
 {
 public:
-    simple_string(std::string_view value) noexcept
+    simple_string(std::string const &value) noexcept
         : value_{std::move(value)}
     {
     }
 
-    void put(std::ostream &stream)
+    void put(std::ostream &stream) const
     {
         stream << detail::marker::simple_string
                << value_
@@ -54,18 +54,18 @@ public:
     }
 
 private:
-    std::string_view value_;
+    std::string value_;
 };
 
 class error_message final
 {
 public:
-    error_message(std::string_view value) noexcept
+    error_message(std::string const &value) noexcept
         : value_{std::move(value)}
     {
     }
 
-    void put(std::ostream &stream)
+    void put(std::ostream &stream) const
     {
         stream << detail::marker::error_message
                << value_
@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    std::string_view value_;
+    std::string value_;
 };
 
 template <typename T>
@@ -82,7 +82,7 @@ class integer final
 {
 public:
     static_assert(
-            std::is_integral_v<std::decay_t<T>>,
+            std::is_integral<typename std::decay<T>::type>::value,
             "The class \"rediscpp::resp::serialization::integer\" "
             "has to be created only from an integral type."
         );
@@ -92,7 +92,7 @@ public:
     {
     }
 
-    void put(std::ostream &stream)
+    void put(std::ostream &stream) const
     {
         stream << detail::marker::integer
                << static_cast<std::int64_t>(value_)
@@ -112,12 +112,12 @@ public:
     {
     }
 
-    bulk_string(std::string_view value) noexcept
+    bulk_string(std::string const &value) noexcept
         : value_{std::move(value)}
     {
     }
 
-    void put(std::ostream &stream)
+    void put(std::ostream &stream) const
     {
         if (value_.data())
         {
@@ -139,7 +139,7 @@ public:
     }
 
 private:
-    std::string_view value_;
+    std::string value_;
 };
 
 class binary_data final
@@ -151,7 +151,7 @@ public:
     {
     }
 
-    void put(std::ostream &stream)
+    void put(std::ostream &stream) const
     {
         if (data_)
         {
@@ -183,7 +183,7 @@ private:
 class null final
 {
 public:
-    void put(std::ostream &stream)
+    void put(std::ostream &stream) const
     {
         serialization::put(stream, bulk_string{});
     }
@@ -198,30 +198,38 @@ public:
     {
     }
 
-    void put(std::ostream &stream)
+    void put(std::ostream &stream) const
     {
         stream << detail::marker::array
-               << std::tuple_size_v<tuple_type>
+               << std::tuple_size<tuple_type>::value
                << detail::marker::cr
                << detail::marker::lf;
 
-        auto put_item = [&stream] (auto && arg)
-        {
-            serialization::put(stream, arg);
-        };
-
-        auto printer = [print = std::move(put_item)] (auto && ... args)
-        {
-            (print(args), ... );
-        };
-
-        std::apply(std::move(printer), values_);
+        print<std::tuple_size<tuple_type>::value>(stream);
     }
 
 private:
-    using tuple_type = std::tuple<std::decay_t<T> ... >;
-    std::tuple<std::decay_t<T> ... > values_;
+    using tuple_type = std::tuple<typename std::decay<T>::type ... >;
+    std::tuple<typename std::decay<T>::type ... > values_;
+
+    template <std::size_t I>
+    typename std::enable_if<I, void>::type print(std::ostream &stream) const
+    {
+        print<I - 1>(stream);
+        serialization::put(stream, std::get<I - 1>(values_));
+    };
+
+    template <std::size_t I>
+    typename std::enable_if<!I, void>::type print(std::ostream &) const
+    {
+    };
 };
+
+template <typename ... T>
+array<T ...> make_array(T && ... args)
+{
+    return {std::forward<T>(args) ...};
+}
 
 template <>
 class array<null> final
@@ -232,7 +240,7 @@ public:
     }
 
 
-    void put(std::ostream &stream)
+    void put(std::ostream &stream) const
     {
         stream << detail::marker::array
                << -1

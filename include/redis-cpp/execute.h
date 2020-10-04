@@ -12,7 +12,7 @@
 
 // STD
 #include <iosfwd>
-#include <string_view>
+#include <string>
 #include <type_traits>
 
 // REDIS-CPP
@@ -24,26 +24,21 @@ namespace rediscpp
 {
 
 template <typename ... TArgs>
-inline void execute_no_flush(std::ostream &stream, std::string_view name, TArgs && ... args)
+inline void execute_no_flush(std::ostream &stream, std::string const &name, TArgs && ... args)
 {
-    static_assert(
-            (std::is_convertible_v<TArgs, std::string_view> && ... && true),
-            "[rediscpp::execute] All arguments of have to be convertable into std::string_view"
-        );
-
-    put(stream, resp::serialization::array{
+    put(stream, resp::serialization::make_array(
             resp::serialization::bulk_string{std::move(name)},
-            resp::serialization::bulk_string{std::string_view{args}} ...
-        });
+            resp::serialization::bulk_string{std::string{args}} ...
+        ));
 }
 
 template <typename ... TArgs>
 [[nodiscard]]
-inline auto execute(std::iostream &stream, std::string_view name, TArgs && ... args)
+inline value execute(std::iostream &stream, std::string const &name, TArgs && ... args)
 {
     execute_no_flush(stream, std::move(name), std::forward<TArgs>(args) ... );
     std::flush(stream);
-    return value{stream};
+    return {stream};
 }
 
 }   // namespace rediscpp

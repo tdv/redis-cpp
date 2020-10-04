@@ -18,6 +18,17 @@
 #include <redis-cpp/stream.h>
 #include <redis-cpp/execute.h>
 
+// A message printer. The message from a queue.
+template <typename T>
+void print_message(T const &value)
+{
+    using namespace rediscpp::resp::deserialization;
+    boost::apply_visitor(rediscpp::resp::detail::make_visitor(
+           [] (bulk_string const &val)
+           { std::cout << val.get() << std::endl; }
+       ), value);
+}
+
 int main()
 {
     try
@@ -27,24 +38,12 @@ int main()
 
         bool volatile stopped = false;
 
-        // A message printer. The message from a queue.
-        auto print_message = [] (auto const &value)
-        {
-            using namespace rediscpp::resp::deserialization;
-            std::visit(rediscpp::resp::detail::overloaded{
-                   [] (bulk_string const &val)
-                   { std::cout << val.get() << std::endl; },
-                   [] (auto const &)
-                   { std::cout << "Unexpected value type." << std::endl; }
-               }, value);
-        };
-
         // The subscriber is runned in its own thread.
         // It's some artificial example, when publisher
         // and subscriber are working in one process.
         // It's only for demonstration library abilities.
         boost::thread subscriber{
-            [&stopped, &queue_name, &print_message]
+            [&stopped, &queue_name]
             {
                 // Its own stream for a subscriber
                 auto stream = rediscpp::make_stream("localhost", "6379");
@@ -55,10 +54,10 @@ int main()
                     // Reading / waiting for a message.
                     rediscpp::value value{*stream};
                     // Message extraction.
-                    std::visit(rediscpp::resp::detail::overloaded{
+                    boost::apply_visitor(rediscpp::resp::detail::make_visitor(
                             // We're wondered only an array in response.
                             // Otherwise, there is an error.
-                            [&print_message] (rediscpp::resp::deserialization::array const &arr)
+                            [] (rediscpp::resp::deserialization::array const &arr)
                             {
                                 std::cout << "-------- Message --------" << std::endl;
                                 for (auto const &i : arr.get())
@@ -67,11 +66,8 @@ int main()
                             },
                             // Oops. An error in a response.
                             [] (rediscpp::resp::deserialization::error_message const &err)
-                            { std::cerr << "Error: " << err.get() << std::endl; },
-                            // An unexpected response.
-                            [] (auto const &)
-                            { std::cout << "Unexpected value type." << std::endl; }
-                        }, value.get());
+                            { std::cerr << "Error: " << err.get() << std::endl; }
+                        ), value.get());
                 }
             }
         };

@@ -15,7 +15,7 @@
 // STD
 #include <iosfwd>
 #include <memory>
-#include <string_view>
+#include <string>
 
 // REDIS-CPP
 #include <redis-cpp/detail/config.h>
@@ -25,7 +25,7 @@ namespace rediscpp
 
 [[nodiscard]]
 std::shared_ptr<std::iostream> make_stream(
-        std::string_view host, std::string_view port);
+        std::string const &host, std::string const &port);
 
 }   // namespace rediscpp
 

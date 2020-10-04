@@ -10,8 +10,8 @@
 #ifndef REDISCPP_DETAIL_CONFIG_H_
 #define REDISCPP_DETAIL_CONFIG_H_
 
-#if __cplusplus < 201703L
+/*#if __cplusplus < 201703L
 #error "RedisCpp. Requires C++ 17 or higher."
-#endif
+#endif*/
 
 #endif  // !REDISCPP_DETAIL_CONFIG_H_

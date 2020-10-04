@@ -39,7 +39,7 @@ int main()
         {
             rediscpp::value value{*stream};
             std::cout << "Set " << key_pref << i << ": "
-                      << value.as<std::string_view>() << std::endl;
+                      << value.as<std::string>() << std::endl;
         }
 
         // Executing command 'GET' N times without getting any response
@@ -57,7 +57,7 @@ int main()
         {
             rediscpp::value value{*stream};
             std::cout << "Get " << key_pref << i << ": "
-                      << value.as<std::string_view>() << std::endl;
+                      << value.as<std::string>() << std::endl;
         }
     }
     catch (std::exception const &e)

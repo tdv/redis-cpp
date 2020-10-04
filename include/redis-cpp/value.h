@@ -13,12 +13,15 @@
 // STD
 #include <iosfwd>
 #include <memory>
-#include <string_view>
+#include <string>
+
+// BOOST
+#include <boost/visit_each.hpp>
 
 // REDIS-CPP
 #include <redis-cpp/detail/config.h>
 #include <redis-cpp/resp/deserialization.h>
-#include <redis-cpp/resp/detail/overloaded.h>
+#include <redis-cpp/resp/detail/visitor.h>
 
 namespace rediscpp
 {
@@ -34,19 +37,19 @@ public:
         switch (marker_)
         {
         case resp::detail::marker::simple_string :
-            item_ = std::make_unique<item_type>(resp::deserialization::simple_string{stream});
+            item_ = std::unique_ptr<item_type>{new item_type{resp::deserialization::simple_string{stream}}};
             break;
         case resp::detail::marker::error_message :
-            item_ = std::make_unique<item_type>(resp::deserialization::error_message{stream});
+            item_ = std::unique_ptr<item_type>{new item_type{resp::deserialization::error_message{stream}}};
             break;
         case resp::detail::marker::integer :
-            item_ = std::make_unique<item_type>(resp::deserialization::integer{stream});
+            item_ = std::unique_ptr<item_type>{new item_type{resp::deserialization::integer{stream}}};
             break;
         case resp::detail::marker::bulk_string :
-            item_ = std::make_unique<item_type>(resp::deserialization::bulk_string{stream});
+            item_ = std::unique_ptr<item_type>{new item_type{resp::deserialization::bulk_string{stream}}};
             break;
         case resp::detail::marker::array :
-            item_ = std::make_unique<item_type>(resp::deserialization::array{stream});
+            item_ = std::unique_ptr<item_type>{new item_type{resp::deserialization::array{stream}}};
             break;
         default :
             break;
@@ -55,7 +58,7 @@ public:
 
     value(item_type const &item)
         : marker_{resp::detail::marker::array}
-        , item_{std::make_unique<item_type>(item)}
+        , item_{std::unique_ptr<item_type>{new item_type{item}}}
     {
     }
 
@@ -111,35 +114,35 @@ public:
     }
 
     [[nodiscard]]
-    auto as_error_message() const
+    std::string as_error_message() const
     {
-        return get_value<std::string_view, resp::deserialization::error_message>();
+        return get_value<std::string, resp::deserialization::error_message>();
     }
 
     [[nodiscard]]
-    auto as_simple_string() const
+    std::string as_simple_string() const
     {
-        return get_value<std::string_view, resp::deserialization::simple_string>();
+        return get_value<std::string, resp::deserialization::simple_string>();
     }
 
     [[nodiscard]]
-    auto as_integer() const
+    std::int64_t as_integer() const
     {
         return get_value<std::int64_t, resp::deserialization::integer>();
     }
 
     [[nodiscard]]
-    auto as_bulk_string() const
+    std::string as_bulk_string() const
     {
-        return get_value<std::string_view, resp::deserialization::bulk_string>();
+        return get_value<std::string, resp::deserialization::bulk_string>();
     }
 
     [[nodiscard]]
-    auto as_string() const
+    std::string as_string() const
     {
         return is_simple_string() ?
-                get_value<std::string_view, resp::deserialization::simple_string>() :
-                get_value<std::string_view, resp::deserialization::bulk_string>();
+                get_value<std::string, resp::deserialization::simple_string>() :
+                get_value<std::string, resp::deserialization::bulk_string>();
     }
 
     template <typename T>
@@ -156,7 +159,7 @@ public:
             throw std::runtime_error{"Empty value."};
         if (is_error_message())
             throw std::runtime_error{std::string{as_error_message()}};
-        return T{get_value<std::decay_t<T>>()};
+        return T{get_value<typename std::decay<T>::type>()};
     }
 
 private:
@@ -164,16 +167,15 @@ private:
     std::unique_ptr<item_type> item_;
 
     template <typename T>
-    std::enable_if_t<std::is_integral_v<T>, T>
+    typename std::enable_if<std::is_integral<T>::value, T>::type
     get_value() const
     {
         return static_cast<T>(as_integer());
     }
 
     template <typename T>
-    std::enable_if_t<
-            std::is_same_v<T, std::string_view> ||
-            std::is_same_v<T, std::string>, std::string_view>
+    typename std::enable_if<
+            std::is_same<T, std::string>::value, std::string>::type
     get_value() const
     {
         return as_string();
@@ -183,12 +185,10 @@ private:
     R get_value() const
     {
         R result;
-        std::visit(resp::detail::overloaded{
-                [] (auto const &)
-                { throw std::bad_cast{}; },
+        boost::apply_visitor(resp::detail::make_visitor(
                 [&result] (T const &val)
                 { result = val.get(); }
-            }, get());
+            ), get());
 
         return result;
     }

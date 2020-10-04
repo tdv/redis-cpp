@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12.0)
 set(PROJECT ping)
 string(TOLOWER "${PROJECT}" PROJECT_LC)
 
-set (STD_CXX "c++17")
+set (STD_CXX "c++11")
 set (REDISCPP_FLAGS "-DREDISCPP_HEADER_ONLY=ON")
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/MyCMakeScripts)
