@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.12.0)
 
 #-----------------------Options--------------------------------------
-option (REDISCPP_PURE_CORE "[REDISCPP] Only pure core" OFF)
 option (REDISCPP_HEADER_ONLY "[REDISCPP] Header only" OFF)
 option (REDISCPP_EASY_ADDRESS_RESOLVE "[REDISCPP] Use easy address resolving" OFF)
 #--------------------------------------------------------------------
@@ -9,10 +8,6 @@ option (REDISCPP_EASY_ADDRESS_RESOLVE "[REDISCPP] Use easy address resolving" OF
 project(redis-cpp)
 set(PROJECT ${PROJECT_NAME})
 string(TOLOWER "${PROJECT}" PROJECT_LC)
-
-if (REDISCPP_PURE_CORE)
-    set (REDISCPP_DEFINES "${REDISCPP_DEFINES} -DREDISCPP_PURE_CORE")
-endif()
 
 if (REDISCPP_HEADER_ONLY)
     set (REDISCPP_DEFINES "${REDISCPP_DEFINES} -DREDISCPP_HEADER_ONLY")
@@ -37,19 +32,14 @@ set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 #---------------------------------------------------------
 
-if (NOT REDISCPP_PURE_CORE)
+find_package(Boost 1.67.0 REQUIRED COMPONENTS thread system iostreams)
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
 
-    find_package(Boost 1.67.0 REQUIRED COMPONENTS thread system iostreams)
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
-
-    set (LIBRARIES
-        ${LIBRARIES}
-        ${Boost_LIBRARIES}
-    )
-
-endif()
-
+set (LIBRARIES
+    ${LIBRARIES}
+    ${Boost_LIBRARIES}
+)
 
 if (NOT REDISCPP_HEADER_ONLY)
     set(SOURCES
@@ -71,7 +61,7 @@ set (LIBRARIES
 
 install(DIRECTORY include/${PROJECT_LC} DESTINATION include)
 
-if (NOT REDISCPP_HEADER_ONLY AND NOT REDISCPP_PURE_CORE)
+if (NOT REDISCPP_HEADER_ONLY)
     install (TARGETS ${PROJECT_LC} EXPORT ${PROJECT_LC}
                  ARCHIVE DESTINATION lib
     )

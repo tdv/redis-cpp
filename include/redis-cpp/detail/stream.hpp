@@ -7,8 +7,6 @@
 //  (See accompanying file LICENSE)
 //-------------------------------------------------------------------
 
-#ifndef REDISCPP_PURE_CORE
-
 // STD
 #include <stdexcept>
 #include <utility>
@@ -127,4 +125,3 @@ std::shared_ptr<std::iostream> make_stream(std::string const &host,
 
 }   // namespace rediscpp
 
-#endif  // !REDISCPP_PURE_CORE

@@ -1,3 +1,6 @@
+# This is a backport in c++11 of redis-cpp in c++17  
+Switch to master branch in order to use main version in c++17, but if you need to use c++11, read below and use that. There are all examples have adapted to c++11.  
+
 # redis-cpp - lightweight C++ client library for Redis
 redis-cpp is a library in C++17 for executing Redis [commands](https://redis.io/commands) with support of the pipelines and publish / subscribe pattern. Moreover, you can extend the library by your own stream implementation to communicate with Redis. Alse, you can use it like RESP serializer (pure core).  
 You can know only a couple functions to start to work with Rides through the library.  
@@ -16,7 +19,6 @@ And you will dive deeper if you feel the necessity.
 - easy way to access Redis
 - pipelines
 - publish / subscribe
-- pure core in C++ for the RESP
 - extensible transport
 - header-only library if it's necessary
 - minimal dependencies
@@ -34,12 +36,12 @@ You might try other compiler or OS.
 All code is a cross-platform code.  
 
 # Dependencies
-- Boost (only for using with built-in implementation of transport).  
+- Boost
 
 # Build and install
 ## Build library
 ```bash
-git clone https://github.com/tdv/redis-cpp.git  
+git clone -b c++11 https://github.com/tdv/redis-cpp.git  
 cd redis-cpp
 mkdir build  
 cd build  
@@ -48,16 +50,14 @@ make
 make install  
 ```
 You can use CMAKE_INSTALL_PREFIX to select the particular installation directory  
-Moreover, you can use cmake options to configure library like header-only or pure core library.  
+Moreover, you can use cmake options to configure library like header-only library.  
 Instead of cmake options, you can define REDISCPP_HEADER_ONLY and use the library like header-only library without any cmake file.  
 
 **NOTE**  
-redis-cpp has two build options  
-- Pure core only  
+redis-cpp has a build options  
 - Header-only  
 
-Use cmake -D with REDISCPP_HEADER_ONLY or REDISCPP_PURE_CORE. You can enable both options at the same time.  
-You can use your own transport with the 'pure core' option.  
+Use cmake -D with REDISCPP_HEADER_ONLY.  
 
 If you need to use the library like header-only library, you can copy the folder redis-cpp from include/redis-cpp in your project and define the macro REDISCPP_HEADER_ONLY before including redis-cpp headers according to the code below
 ```cpp
@@ -83,7 +83,7 @@ make
 Look at the redis-docker folder to get all what you need to start testing redis-cpp. There are files to build and run Redis server in Docker.  
 
 ## Ping
-[Source code](https://github.com/tdv/redis-cpp/tree/master/examples/ping)  
+[Source code](https://github.com/tdv/redis-cpp/tree/c%2B%2B11/examples/ping)  
 **Description**  
 The "Ping" example demonstrates how to execute a Redis command.  
 
@@ -110,12 +110,11 @@ int main()
     }
     return EXIT_SUCCESS;
 }
-
 ```
 
 
 ## Set and Get data
-[Source code](https://github.com/tdv/redis-cpp/tree/master/examples/setget)  
+[Source code](https://github.com/tdv/redis-cpp/tree/c%2B%2B11/examples/setget)  
 **Description**  
 The example demonstrates how to set and get a value.  
 
@@ -153,7 +152,7 @@ int main()
 ```
 
 ## Pipeline
-[Source code](https://github.com/tdv/redis-cpp/tree/master/examples/pipeline)  
+[Source code](https://github.com/tdv/redis-cpp/tree/c%2B%2B11/examples/pipeline)  
 **Description**  
 It's a more complicated example which demonstrates how to use a pipeline within Redis to reach a better performance.  
 
@@ -190,7 +189,7 @@ int main()
         {
             rediscpp::value value{*stream};
             std::cout << "Set " << key_pref << i << ": "
-                      << value.as<std::string_view>() << std::endl;
+                      << value.as<std::string>() << std::endl;
         }
 
         // Executing command 'GET' N times without getting any response
@@ -208,7 +207,7 @@ int main()
         {
             rediscpp::value value{*stream};
             std::cout << "Get " << key_pref << i << ": "
-                      << value.as<std::string_view>() << std::endl;
+                      << value.as<std::string>() << std::endl;
         }
     }
     catch (std::exception const &e)
@@ -221,7 +220,7 @@ int main()
 ```
 
 ## Resp
-[Source code](https://github.com/tdv/redis-cpp/tree/master/examples/resp)  
+[Source code](https://github.com/tdv/redis-cpp/tree/c%2B%2B11/examples/resp)  
 **Description**  
 The "Resp" example demonstrates a basic RESP serialization within redis-cpp without communication with Redis server. It's only an exampe to show how to use RESP serialization with redis-cpp librarry.  
 ```cpp
@@ -230,32 +229,36 @@ The "Resp" example demonstrates a basic RESP serialization within redis-cpp with
 #include <iostream>
 #include <sstream>
 
+// BOOST
+#include <boost/variant/apply_visitor.hpp>
+
+// REDIS-CPP
 #include <redis-cpp/execute.h>
 
 namespace resps = rediscpp::resp::serialization;
 namespace respds = rediscpp::resp::deserialization;
 
-auto make_sample_data()
+std::string make_sample_data()
 {
     std::ostringstream stream;
 
-    put(stream, resps::array{
+    put(stream, resps::make_array(
             resps::simple_string{"This is a simple string."},
             resps::error_message{"This is an error message."},
             resps::bulk_string{"This is a bulk string."},
-            resps::integer{100500},
-            resps::array{
+            resps::integer<std::size_t>{100500},
+            resps::make_array(
                 resps::simple_string("This is a simple string in a nested array."),
                 resps::bulk_string("This is a bulk string in a nested array.")
-            }
-        });
+            )
+        ));
 
     return stream.str();
 }
 
 void print_value(respds::array::item_type const &value, std::ostream &stream)
 {
-    std::visit(rediscpp::resp::detail::overloaded{
+    boost::apply_visitor(rediscpp::resp::detail::make_visitor(
             [&stream] (respds::simple_string const &val)
             { stream << "Simple string: " << val.get() << std::endl; },
             [&stream] (respds::error_message const &val)
@@ -270,10 +273,8 @@ void print_value(respds::array::item_type const &value, std::ostream &stream)
                 for (auto const &i : val.get())
                     print_value(i, stream);
                 stream << "-----------------" << std::endl;
-            },
-            [&stream] (auto const &)
-            { stream << "Unexpected value type." << std::endl; }
-        }, value);
+            }
+        ), value);
 }
 
 void print_sample_data(std::istream &istream, std::ostream &ostream)
@@ -305,7 +306,7 @@ int main()
 ```
 
 ## Publish / Subscribe
-[Source code](https://github.com/tdv/redis-cpp/tree/master/examples/pubsub)  
+[Source code](https://github.com/tdv/redis-cpp/tree/c%2B%2B11/examples/pubsub)  
 **Description**  
 This is a more complicated example within redis-cpp which demonstrates how to publicate messages and make subscription onto a queue. In the example a publisher and subscriber locate in one process simultaniously, each one has its own stream to communicate with Redis. Usually, in real projects the publisher and subscriber are not located in one process.  
 
@@ -321,6 +322,17 @@ This is a more complicated example within redis-cpp which demonstrates how to pu
 #include <redis-cpp/stream.h>
 #include <redis-cpp/execute.h>
 
+// A message printer. The message from a queue.
+template <typename T>
+void print_message(T const &value)
+{
+    using namespace rediscpp::resp::deserialization;
+    boost::apply_visitor(rediscpp::resp::detail::make_visitor(
+           [] (bulk_string const &val)
+           { std::cout << val.get() << std::endl; }
+       ), value);
+}
+
 int main()
 {
     try
@@ -330,24 +342,12 @@ int main()
 
         bool volatile stopped = false;
 
-        // A message printer. The message from a queue.
-        auto print_message = [] (auto const &value)
-        {
-            using namespace rediscpp::resp::deserialization;
-            std::visit(rediscpp::resp::detail::overloaded{
-                   [] (bulk_string const &val)
-                   { std::cout << val.get() << std::endl; },
-                   [] (auto const &)
-                   { std::cout << "Unexpected value type." << std::endl; }
-               }, value);
-        };
-
         // The subscriber is runned in its own thread.
         // It's some artificial example, when publisher
         // and subscriber are working in one process.
         // It's only for demonstration library abilities.
         boost::thread subscriber{
-            [&stopped, &queue_name, &print_message]
+            [&stopped, &queue_name]
             {
                 // Its own stream for a subscriber
                 auto stream = rediscpp::make_stream("localhost", "6379");
@@ -358,10 +358,10 @@ int main()
                     // Reading / waiting for a message.
                     rediscpp::value value{*stream};
                     // Message extraction.
-                    std::visit(rediscpp::resp::detail::overloaded{
+                    boost::apply_visitor(rediscpp::resp::detail::make_visitor(
                             // We're wondered only an array in response.
                             // Otherwise, there is an error.
-                            [&print_message] (rediscpp::resp::deserialization::array const &arr)
+                            [] (rediscpp::resp::deserialization::array const &arr)
                             {
                                 std::cout << "-------- Message --------" << std::endl;
                                 for (auto const &i : arr.get())
@@ -370,11 +370,8 @@ int main()
                             },
                             // Oops. An error in a response.
                             [] (rediscpp::resp::deserialization::error_message const &err)
-                            { std::cerr << "Error: " << err.get() << std::endl; },
-                            // An unexpected response.
-                            [] (auto const &)
-                            { std::cout << "Unexpected value type." << std::endl; }
-                        }, value.get());
+                            { std::cerr << "Error: " << err.get() << std::endl; }
+                        ), value.get());
                 }
             }
         };
