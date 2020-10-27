@@ -179,6 +179,18 @@ private:
         return as_string();
     }
 
+    template <typename T>
+    static auto is_null(T &v) noexcept
+            -> decltype(v.is_null())
+    {
+        return v.is_null();
+    }
+
+    static  bool is_null(...) noexcept
+    {
+        return false;
+    }
+
     template <typename R, typename T>
     R get_value() const
     {
@@ -187,7 +199,11 @@ private:
                 [] (auto const &)
                 { throw std::bad_cast{}; },
                 [&result] (T const &val)
-                { result = val.get(); }
+                {
+                    if (is_null(val))
+                        throw std::logic_error("You can't cast Null to any type.");
+                    result = val.get();
+                }
             }, get());
 
         return result;
