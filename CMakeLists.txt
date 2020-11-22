@@ -4,9 +4,16 @@ cmake_minimum_required(VERSION 3.12.0)
 option (REDISCPP_PURE_CORE "[REDISCPP] Only pure core" OFF)
 option (REDISCPP_HEADER_ONLY "[REDISCPP] Header only" OFF)
 option (REDISCPP_EASY_ADDRESS_RESOLVE "[REDISCPP] Use easy address resolving" OFF)
+option (REDISCPP_PACKAGE_TEST "[REDISCPP] Test installation" OFF)
 #--------------------------------------------------------------------
 
-project(redis-cpp)
+mark_as_advanced(REDISCPP_PACKAGE_TEST)
+
+project(redis-cpp
+    VERSION 1.0.0
+    LANGUAGES CXX
+    DESCRIPTION "redis-cpp - lightweight C++ client library for Redis"
+)
 set(PROJECT ${PROJECT_NAME})
 string(TOLOWER "${PROJECT}" PROJECT_LC)
 
@@ -14,65 +21,116 @@ if (REDISCPP_PURE_CORE)
     set (REDISCPP_DEFINES "${REDISCPP_DEFINES} -DREDISCPP_PURE_CORE")
 endif()
 
-if (REDISCPP_HEADER_ONLY)
-    set (REDISCPP_DEFINES "${REDISCPP_DEFINES} -DREDISCPP_HEADER_ONLY")
-endif()
-
 if (REDISCPP_EASY_ADDRESS_RESOLVE)
     set(REDISCPP_DEFINES, "${REDISCPP_DEFINES} -DREDISCPP_EASY_ADDRESS_RESOLVE")
 endif()
 
-set (STD_CXX "c++17")
-
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
-set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/MyCMakeScripts)
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-
-
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall ${REDISCPP_DEFINES} -std=${STD_CXX}")
-set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -W -Wall ${REDISCPP_DEFINES} -std=${STD_CXX} -DNDEBUG")
-set (CMAKE_POSITION_INDEPENDENT_CODE ON)
+set (CMAKE_CXX_EXTENSIONS OFF)
 
 #---------------------------------------------------------
 
+add_library (${PROJECT_LC}-ho INTERFACE)
+add_library (${PROJECT_LC}::${PROJECT_LC}-ho ALIAS ${PROJECT_LC}-ho)
+
+target_include_directories (${PROJECT_LC}-ho INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_compile_definitions(${PROJECT_LC}-ho INTERFACE ${REDISCPP_DEFINES} REDISCPP_HEADER_ONLY)
+target_compile_features(${PROJECT_LC}-ho INTERFACE cxx_std_17)
+
+if (NOT REDISCPP_HEADER_ONLY)
+    add_library (${PROJECT_LC} STATIC src/redis-cpp/stream.cpp)
+    add_library (${PROJECT_LC}::${PROJECT_LC} ALIAS ${PROJECT_LC})
+    target_include_directories (${PROJECT_LC} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    )
+    target_compile_definitions(${PROJECT_LC} INTERFACE ${REDISCPP_DEFINES})
+    target_compile_features(${PROJECT_LC} PUBLIC cxx_std_17)
+    set_target_properties(${PROJECT_LC} PROPERTIES PUBLIC_CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+    if (UNIX)
+        target_compile_options(${PROJECT_LC} PRIVATE -Wall -Wextra -W)
+    endif()
+endif()
+
 if (NOT REDISCPP_PURE_CORE)
+    find_package (Boost 1.67.0 REQUIRED COMPONENTS thread system iostreams)
 
-    find_package(Boost 1.67.0 REQUIRED COMPONENTS thread system iostreams)
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    target_link_libraries (${PROJECT_LC}-ho INTERFACE Boost::boost Boost::system Boost::thread Boost::iostreams)
 
-    set (LIBRARIES
-        ${LIBRARIES}
-        ${Boost_LIBRARIES}
-    )
-
+    if(NOT REDISCPP_HEADER_ONLY)
+        target_link_libraries (${PROJECT_LC} PUBLIC Boost::boost Boost::system Boost::thread Boost::iostreams)
+    endif()
 endif()
 
+
+
+# install
+include (GNUInstallDirs)
+include (CMakePackageConfigHelpers)
+
+write_basic_package_version_file (
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/${PROJECT_LC}-config-version.cmake
+    COMPATIBILITY
+        SameMajorVersion
+)
+
+configure_package_config_file (
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_LC}-config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/${PROJECT_LC}-config.cmake
+    INSTALL_DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_LC}
+)
+
+install (
+    DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING
+    PATTERN "*.hpp"
+    PATTERN "*.h"
+)
+
+install (
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/${PROJECT_LC}-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/${PROJECT_LC}-config-version.cmake
+    DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_LC}
+)
+
+install (
+    TARGETS
+        ${PROJECT_LC}-ho
+    EXPORT ${PROJECT_LC}-targets
+)
 
 if (NOT REDISCPP_HEADER_ONLY)
-    set(SOURCES
-        ${SOURCES}
-        src/redis-cpp/stream.cpp
+    install (
+        TARGETS
+            ${PROJECT_LC}
+        EXPORT ${PROJECT_LC}-targets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 endif()
 
-include_directories (include)
-if (NOT REDISCPP_HEADER_ONLY)
-    add_library (${PROJECT_LC} STATIC ${SOURCES})
-    target_link_libraries (${PROJECT_LC} ${LIBRARIES})
-endif()
+install(
+    EXPORT ${PROJECT_LC}-targets
+    NAMESPACE ${PROJECT_LC}::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_LC}
+)
 
-set (LIBRARIES
-        ${PROJECT_LC}
-        ${LIBRARIES}
-    )
-
-install(DIRECTORY include/${PROJECT_LC} DESTINATION include)
-
-if (NOT REDISCPP_HEADER_ONLY AND NOT REDISCPP_PURE_CORE)
-    install (TARGETS ${PROJECT_LC} EXPORT ${PROJECT_LC}
-                 ARCHIVE DESTINATION lib
-    )
+# testing
+if (REDISCPP_PACKAGE_TEST)
+    add_subdirectory(test/package/header_only)
+    if (NOT REDISCPP_HEADER_ONLY)
+        add_subdirectory(test/package/compiled)
+    endif()
 endif()
