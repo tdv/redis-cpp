@@ -1,19 +1,19 @@
 # redis-cpp - lightweight C++ client library for Redis
-redis-cpp is a library in C++17 for executing Redis [commands](https://redis.io/commands) with support of the pipelines and publish / subscribe pattern. Moreover, you can extend the library by your own stream implementation to communicate with Redis. Alse, you can use it like RESP serializer (pure core).  
-You can know only a couple functions to start to work with Rides through the library.  
+redis-cpp is a C++17 library for executing Redis [commands](https://redis.io/commands) with support for pipelines and the publish / subscribe pattern. Moreover, you can extend the library with your own stream implementation to communicate with Redis. You can also use it like a RESP serializer (pure core). You need only know a couple of functions to start working with Redis.
+
 ```cpp
 // Connect to server
 auto stream = rediscpp::make_stream("localhost", "6379");
 // Execute command
 std::cout << rediscpp::execute(*stream, "ping").as<std::string>() << std::endl;
 ```
-And you will dive deeper if you feel the necessity.  
+And you may dive deeper if you feel the need.
 
 **NOTE**  
-If you need a c++11 version you could switch to c++11 branch and use the one.  
+If you need a C++11 version you could switch to c++11 branch and use that one.
 
 # Version
-1.0.0  
+1.0.0
 
 # Features
 - easy way to access Redis
@@ -34,12 +34,13 @@ This has compiled and tested within gcc 9.2.1 on Ubuntu 19.10.
 You might try other compiler or OS.  
 
 **NOTE**  
-All code is a cross-platform code.  
+All code is a cross-platform.
 
 # Dependencies
 - Boost (only for using with built-in implementation of transport).  
 
 # Build and install
+
 ## Build library
 ```bash
 git clone https://github.com/tdv/redis-cpp.git  
@@ -50,9 +51,9 @@ cmake ..
 make  
 make install  
 ```
-You can use CMAKE_INSTALL_PREFIX to select the particular installation directory  
-Moreover, you can use cmake options to configure library like header-only or pure core library.  
-Instead of cmake options, you can define REDISCPP_HEADER_ONLY and use the library like header-only library without any cmake file.  
+You can use CMAKE_INSTALL_PREFIX to select the installation directory  
+Moreover, you can use cmake options to configure the library for header-only or pure core.  
+Instead of cmake options, you can define REDISCPP_HEADER_ONLY and use the library as header-only without any cmake file.  
 
 **NOTE**  
 redis-cpp has two build options  
@@ -62,7 +63,8 @@ redis-cpp has two build options
 Use cmake -D with REDISCPP_HEADER_ONLY or REDISCPP_PURE_CORE. You can enable both options at the same time.  
 You can use your own transport with the 'pure core' option.  
 
-If you need to use the library like header-only library, you can copy the folder redis-cpp from include/redis-cpp in your project and define the macro REDISCPP_HEADER_ONLY before including redis-cpp headers according to the code below
+If you need to use the header-only library, you can copy the folder redis-cpp from *include/redis-cpp* in your project and define the macro REDISCPP_HEADER_ONLY before including the redis-cpp headers following the example code below:
+
 ```cpp
 #define REDISCPP_HEADER_ONLY
 #include <redis-cpp/stream.h>
@@ -83,7 +85,7 @@ make
 # Examples
 
 **NOTE**  
-Look at the redis-docker folder to get all what you need to start testing redis-cpp. There are files to build and run Redis server in Docker.  
+Look at the redis-docker folder to get all you need to start testing redis-cpp. There are files to build and run a Redis server in Docker.  
 
 ## Ping
 [Source code](https://github.com/tdv/redis-cpp/tree/master/examples/ping)  
@@ -158,7 +160,7 @@ int main()
 ## Pipeline
 [Source code](https://github.com/tdv/redis-cpp/tree/master/examples/pipeline)  
 **Description**  
-It's a more complicated example which demonstrates how to use a pipeline within Redis to reach a better performance.  
+It's a more complicated example which demonstrates how to use a pipeline within Redis to achieve better performance.  
 
 ```cpp
 // STD
@@ -188,7 +190,7 @@ int main()
         // Flush all
         std::flush(*stream);
 
-        // Getting response for each sended 'SET' request
+        // Getting response for each sent 'SET' request
         for (int i = 0 ; i < N ; ++i)
         {
             rediscpp::value value{*stream};
@@ -206,7 +208,7 @@ int main()
         // Flush all
         std::flush(*stream);
 
-        // Getting response for each sended 'GET' request
+        // Getting response for each sent 'GET' request
         for (int i = 0 ; i < N ; ++i)
         {
             rediscpp::value value{*stream};
@@ -226,7 +228,8 @@ int main()
 ## Resp
 [Source code](https://github.com/tdv/redis-cpp/tree/master/examples/resp)  
 **Description**  
-The "Resp" example demonstrates a basic RESP serialization within redis-cpp without communication with Redis server. It's only an exampe to show how to use RESP serialization with redis-cpp librarry.  
+The "Resp" example demonstrates a basic RESP serialization within redis-cpp without communication with Redis server. It's meant to show you how to use RESP serialization with redis-cpp library.  
+
 ```cpp
 // STD
 #include <cstdlib>
@@ -310,7 +313,7 @@ int main()
 ## Publish / Subscribe
 [Source code](https://github.com/tdv/redis-cpp/tree/master/examples/pubsub)  
 **Description**  
-This is a more complicated example within redis-cpp which demonstrates how to publicate messages and make subscription onto a queue. In the example a publisher and subscriber locate in one process simultaniously, each one has its own stream to communicate with Redis. Usually, in real projects the publisher and subscriber are not located in one process.  
+This is a more complicated example within redis-cpp which demonstrates how to publish messages and create a subscription to a queue. In the example a publisher and subscriber located in one process simultaniously, each one has its own stream to communicate with Redis. Usually, in real projects the publisher and subscriber are not located in one process.  
 
 ```cpp
 // STD
@@ -345,7 +348,7 @@ int main()
                }, value);
         };
 
-        // The subscriber is runned in its own thread.
+        // The subscriber is run in its own thread.
         // It's some artificial example, when publisher
         // and subscriber are working in one process.
         // It's only for demonstration library abilities.
@@ -418,6 +421,6 @@ int main()
 ```  
 
 # Conclusion  
-Take a look at a code above one more time. I hope there's you could find something useful for your own projects with Redis. I'd thought to add one more level to wrap all Redis commands and refused this idea. A lot of useless work with a small outcome, because, in many cases we need to run only a handful of commands. Maybe it'll be a good idea in the future. Now you can use redis-cpp like lightweight library to execute Redis commands and get results  with minimal effort.  
+Take a look at a code above one more time. I hope you can find something useful for your own projects with Redis. I'd thought about adding one more level to wrap all Redis commands and refused this idea. A lot of useless work with a small outcome, because, in many cases we need to run only a handful of commands. Maybe it'll be a good idea in the future. Now you can use redis-cpp like lightweight library to execute Redis commands and get results  with minimal effort.  
 
 **Enjoy your own projects with Redis!**  
