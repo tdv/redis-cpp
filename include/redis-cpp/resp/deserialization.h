@@ -219,7 +219,10 @@ public:
         std::getline(stream, string);
         auto count = std::stoll(string);
         if (count < 0)
+        {
             is_null_ = true;
+            return;
+        }
         if (count < 1)
             return;
         items_.reserve(static_cast<typename items_type::size_type>(count));
