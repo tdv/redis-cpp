@@ -126,7 +126,10 @@ public:
         std::getline(stream, string);
         auto const length = std::stoll(string);
         if (length < 0)
+        {
             is_null_ = true;
+            return;
+        }
         if (length < 1)
             return;
         data_.resize(static_cast<typename buffer_type::size_type>(length));
