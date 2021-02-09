@@ -69,6 +69,7 @@ public:
     simple_string(std::istream &stream)
     {
         std::getline(stream, value_);
+        value_.pop_back(); // removing '\r' from string
     }
 
     [[nodiscard]]
@@ -87,6 +88,7 @@ public:
     error_message(std::istream &stream)
     {
         std::getline(stream, value_);
+        value_.pop_back(); // removing '\r' from string
     }
 
     [[nodiscard]]
