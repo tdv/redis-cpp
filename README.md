@@ -30,7 +30,7 @@ If you need a C++11 version you could switch to c++11 branch and use that one.
 Distributed under the MIT License
 
 # Compiler and OS
-This has compiled and tested within gcc 9.2.1 on Ubuntu 19.10.  
+This has compiled and tested within gcc 9.3 and clang 10.0 on Ubuntu 20.04.  
 You might try other compiler or OS.  
 
 **NOTE**  
