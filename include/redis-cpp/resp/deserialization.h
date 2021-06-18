@@ -33,7 +33,7 @@ namespace deserialization
 {
 
 [[nodiscard]]
-char get_mark(std::istream &stream)
+inline char get_mark(std::istream &stream)
 {
     switch (stream.get())
     {
