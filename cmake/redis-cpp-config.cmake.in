@@ -3,6 +3,8 @@ set(@PROJECT_NAME@_VERSION @PROJECT_VERSION@)
 
 set_and_check(@PROJECT_NAME@_INCLUDE_DIR "${PACKAGE_PREFIX_DIR}/include")
 
+message(STATUS "redis-cpp REDISCPP_PURE_CORE=${REDISCPP_PURE_CORE}")
+
 if(NOT REDISCPP_PURE_CORE)
     include(CMakeFindDependencyMacro)
     find_dependency(Boost 1.67.0 COMPONENTS thread system iostreams)
@@ -10,4 +12,4 @@ endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake)
 
-check_required_components(@PROJECT_NAME@)
+check_required_components(@PROJECT_NAME@-ho)
