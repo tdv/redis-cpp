@@ -37,7 +37,7 @@ You might try other compiler or OS.
 All code is a cross-platform.
 
 # Dependencies
-- Boost (only for using with built-in implementation of transport).  
+- Boost (at least 1.71 only for using with built-in implementation of transport).  
 
 # Build and install
 
