@@ -14,4 +14,10 @@
 #error "RedisCpp. Requires C++ 17 or higher."
 #endif
 
+#ifdef REDISCPP_HEADER_ONLY
+#   define REDISCPP_INLINE inline
+#elif
+#   define REDISCPP_INLINE
+#endif  // !REDISCPP_HEADER_ONLY
+
 #endif  // !REDISCPP_DETAIL_CONFIG_H_
