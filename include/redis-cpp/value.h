@@ -11,9 +11,12 @@
 #define REDISCPP_VALUE_H_
 
 // STD
+#include <algorithm>
 #include <iosfwd>
+#include <iterator>
 #include <memory>
 #include <string_view>
+#include <vector>
 
 // REDIS-CPP
 #include <redis-cpp/detail/config.h>
@@ -142,6 +145,18 @@ public:
                 get_value<std::string_view, resp::deserialization::bulk_string>();
     }
 
+    [[nodiscard]]
+    auto as_string_array() const
+    {
+        return get_array<std::string>();
+    }
+
+    [[nodiscard]]
+    auto as_integer_array() const
+    {
+        return get_array<std::int64_t>();
+    }
+
     template <typename T>
     operator T () const
     {
@@ -201,8 +216,31 @@ private:
                 [&result] (T const &val)
                 {
                     if (is_null(&val))
-                        throw std::logic_error("You can't cast Null to any type.");
+                        throw std::logic_error("You can't cast Null to a type.");
                     result = val.get();
+                }
+            }, get());
+
+        return result;
+    }
+
+    template <typename T>
+    std::vector<T> get_array() const
+    {
+        std::vector<T> result;
+
+        std::visit(resp::detail::overloaded{
+                [] (auto const &)
+                { throw std::bad_cast{}; },
+                [&result] (resp::deserialization::array const &val)
+                {
+                    if (is_null(&val))
+                        throw std::logic_error("You can't cast Null to a type.");
+                    auto const &array = val.get();
+                    std::transform(std::begin(array), std::end(array),
+                            std::back_inserter(result),
+                            [] (auto const &i) { return value{i}.as<T>(); }
+                        );
                 }
             }, get());
 
