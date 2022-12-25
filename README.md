@@ -13,7 +13,7 @@ And you may dive deeper if you feel the need.
 If you need a C++11 version you could switch to c++11 branch and use that one.
 
 # Version
-1.0.0
+1.1.0
 
 # Features
 - easy way to access Redis

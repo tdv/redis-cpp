@@ -10,7 +10,7 @@ option (REDISCPP_PACKAGE_TEST "[REDISCPP] Test installation" OFF)
 mark_as_advanced(REDISCPP_PACKAGE_TEST)
 
 project(redis-cpp
-    VERSION 1.0.0
+    VERSION 1.1.0
     LANGUAGES CXX
     DESCRIPTION "redis-cpp - lightweight C++ client library for Redis"
 )
