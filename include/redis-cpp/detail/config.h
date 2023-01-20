@@ -16,7 +16,7 @@
 
 #ifdef REDISCPP_HEADER_ONLY
 #   define REDISCPP_INLINE inline
-#elif
+#else
 #   define REDISCPP_INLINE
 #endif  // !REDISCPP_HEADER_ONLY
 
