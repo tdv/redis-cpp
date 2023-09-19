@@ -30,7 +30,7 @@ inline namespace resp
 namespace deserialization
 {
 [[nodiscard]]
-REDISCPP_INLINE
+inline
 auto get_mark(std::istream &stream)
 {
     switch (stream.get())
