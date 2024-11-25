@@ -131,10 +131,11 @@ public:
             is_null_ = true;
             return;
         }
-        if (length < 1)
-            return;
-        data_.resize(static_cast<typename buffer_type::size_type>(length));
-        stream.read(&data_[0], length);
+        if (length > 0)
+        {
+            data_.resize(static_cast<typename buffer_type::size_type>(length));
+            stream.read(&data_[0], length);
+        }
         std::getline(stream, string);
     }
 
