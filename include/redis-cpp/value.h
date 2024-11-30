@@ -51,14 +51,55 @@ public:
         case resp::detail::marker::array :
             item_ = std::make_unique<item_type>(resp::deserialization::array{stream});
             break;
+        case resp::detail::marker::null :
+            item_ = std::make_unique<item_type>(resp::deserialization::null{stream});
+            break;
+        case resp::detail::marker::boolean :
+            item_ = std::make_unique<item_type>(resp::deserialization::boolean{stream});
+            break;
+        case resp::detail::marker::double_float :
+            item_ = std::make_unique<item_type>(resp::deserialization::double_float{stream});
+            break;
+        case resp::detail::marker::big_number :
+            item_ = std::make_unique<item_type>(resp::deserialization::big_number{stream});
+            break;
+        case resp::detail::marker::bulk_error :
+            item_ = std::make_unique<item_type>(resp::deserialization::bulk_error{stream});
+            break;
+        case resp::detail::marker::verbatim_string :
+            item_ = std::make_unique<item_type>(resp::deserialization::verbatim_string{stream});
+            break;
+        case resp::detail::marker::map :
+            item_ = std::make_unique<item_type>(resp::deserialization::map{stream});
+            break;
+        case resp::detail::marker::attributes_alt :
+        case resp::detail::marker::attributes :
+        {
+            auto attrs = resp::detail::make_value_ptr<resp::deserialization::attributes>(stream);
+            item_ = std::make_unique<item_type>(resp::deserialization::parse_item(stream));
+            resp::deserialization::set_attributes(*item_, std::move(attrs));
+            break;
+        }
+        case resp::detail::marker::set :
+            item_ = std::make_unique<item_type>(resp::deserialization::set{stream});
+            break;
+        case resp::detail::marker::push :
+            item_ = std::make_unique<item_type>(resp::deserialization::push{stream});
+            break;
         default :
             break;
         }
     }
 
     value(item_type const &item)
-        : marker_{resp::detail::marker::array}
+        : marker_{get_marker(item)}
         , item_{std::make_unique<item_type>(item)}
+    {
+    }
+
+    value(item_type &&item)
+        : marker_{get_marker(item)}
+        , item_{std::make_unique<item_type>(std::move(item))}
     {
     }
 
@@ -108,9 +149,70 @@ public:
     }
 
     [[nodiscard]]
+    bool is_null() const noexcept
+    {
+        return marker_ == resp::detail::marker::null 
+            || (item_ ? std::visit([](auto val){return is_null(&val);}, *item_) : false);
+    }
+
+    [[nodiscard]]
+    bool is_boolean() const noexcept
+    {
+        return marker_ == resp::detail::marker::boolean;
+    }
+
+    [[nodiscard]]
+    bool is_double() const noexcept
+    {
+        return marker_ == resp::detail::marker::double_float;
+    }
+
+    [[nodiscard]]
+    bool is_big_number() const noexcept
+    {
+        return marker_ == resp::detail::marker::big_number;
+    }
+
+    [[nodiscard]]
+    bool is_bulk_error() const noexcept
+    {
+        return marker_ == resp::detail::marker::bulk_error;
+    }
+
+    [[nodiscard]]
+    bool is_verbatim_string() const noexcept
+    {
+        return marker_ == resp::detail::marker::verbatim_string;
+    }
+
+    [[nodiscard]]
+    bool is_map() const noexcept
+    {
+        return marker_ == resp::detail::marker::map;
+    }
+
+    [[nodiscard]]
+    bool is_set() const noexcept
+    {
+        return marker_ == resp::detail::marker::set;
+    }
+
+    [[nodiscard]]
+    bool is_push() const noexcept
+    {
+        return marker_ == resp::detail::marker::push;
+    }
+
+    [[nodiscard]]
     bool is_string() const noexcept
     {
-        return is_simple_string() || is_bulk_string();
+        return is_simple_string() || is_bulk_string() || is_verbatim_string();
+    }
+
+    [[nodiscard]]
+    bool is_error() const noexcept
+    {
+        return is_error_message() || is_bulk_error();
     }
 
     [[nodiscard]]
@@ -138,11 +240,83 @@ public:
     }
 
     [[nodiscard]]
+    auto as_boolean() const
+    {
+        return get_value<bool, resp::deserialization::boolean>();
+    }
+
+    [[nodiscard]]
+    auto as_double() const
+    {
+        return get_value<double, resp::deserialization::double_float>();
+    }
+
+    [[nodiscard]]
+    auto as_big_number() const
+    {
+        return get_value<std::string_view, resp::deserialization::big_number>();
+    }
+
+    [[nodiscard]]
+    auto as_bulk_error() const
+    {
+        return get_value<std::string_view, resp::deserialization::bulk_error>();
+    }
+
+    [[nodiscard]]
+    auto as_verbatim_string() const
+    {
+        return get_value<std::string_view, resp::deserialization::bulk_string>();
+    }
+
+    [[nodiscard]]
+    auto& as_map() const
+    {
+        return get_value<const std::map<item_type, item_type, std::less<>>&, resp::deserialization::map>();
+    }
+
+    [[nodiscard]]
+    auto& as_set() const
+    {
+        return get_value<const std::set<item_type, std::less<>>&, resp::deserialization::set>();
+    }
+
+    [[nodiscard]]
+    auto& as_push() const
+    {
+        return get_value<const std::vector<item_type>&, resp::deserialization::push>();
+    }
+
+    [[nodiscard]]
+    auto& as_array() const
+    {
+        return get_value<const std::vector<item_type>&, resp::deserialization::array>();
+    }
+
+    [[nodiscard]]
     auto as_string() const
     {
         return is_simple_string() ?
-                get_value<std::string_view, resp::deserialization::simple_string>() :
-                get_value<std::string_view, resp::deserialization::bulk_string>();
+                as_simple_string() :
+               is_bulk_string() ?
+                as_bulk_string() :
+                as_verbatim_string();
+    }
+
+    [[nodiscard]]
+    auto as_error() const
+    {
+        return is_error_message() ?
+                as_error_message() :
+                as_bulk_error();
+    }
+
+    [[nodiscard]]
+    auto& as_vector() const
+    {
+        return is_array() ?
+                as_array() :
+                as_push();
     }
 
     [[nodiscard]]
@@ -169,9 +343,23 @@ public:
     {
         if (empty())
             throw std::runtime_error{"Empty value."};
-        if (is_error_message())
-            throw std::runtime_error{std::string{as_error_message()}};
+        if (is_error())
+            throw std::runtime_error{std::string{as_error()}};
         return T{get_value<std::decay_t<T>>()};
+    }
+
+    bool has_attributes()
+    {
+        if (empty())
+            throw std::runtime_error{"Empty value."};
+        return std::visit([](auto& value){return value.has_attributes();}, *item_);
+    }
+
+    const deserialization::attributes& get_attributes()
+    {
+        if (empty())
+            throw std::runtime_error{"Empty value."};
+        return std::visit([](auto& value) -> decltype(auto) {return value.get_attributes();}, *item_);
     }
 
 private:
@@ -209,20 +397,20 @@ private:
     template <typename R, typename T>
     R get_value() const
     {
-        R result;
-        std::visit(resp::detail::overloaded{
-                [] (auto const &)
+        return std::visit(resp::detail::overloaded{
+                [] (auto const &) -> R
                 { throw std::bad_cast{}; },
-                [&result] (T const &val)
+                [] (T const &val) -> R
                 {
                     if (is_null(&val))
                         throw std::logic_error("You can't cast Null to a type.");
-                    result = val.get();
+                    return val.get();
                 }
             }, get());
-
-        return result;
     }
+
+    template<class T>
+    static constexpr auto holds_vector = boost::mp11::mp_similar<std::decay_t<decltype(std::declval<T>().get())>, std::vector<int>>::value;
 
     template <typename T>
     std::vector<T> get_array() const
@@ -230,9 +418,11 @@ private:
         std::vector<T> result;
 
         std::visit(resp::detail::overloaded{
-                [] (auto const &)
+                [] ([[maybe_unused]]auto const &val)
+                    -> std::enable_if_t<!holds_vector<decltype(val)>>
                 { throw std::bad_cast{}; },
-                [&result] (resp::deserialization::array const &val)
+                [&result] (auto const &val)
+                    -> std::enable_if_t<holds_vector<decltype(val)>>
                 {
                     if (is_null(&val))
                         throw std::logic_error("You can't cast Null to a type.");
