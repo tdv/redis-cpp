@@ -25,6 +25,17 @@ constexpr auto error_message = '-';
 constexpr auto integer = ':';
 constexpr auto bulk_string = '$';
 constexpr auto array = '*';
+constexpr auto null = '_';
+constexpr auto boolean = '#';
+constexpr auto double_float = ',';
+constexpr auto big_number = '(';
+constexpr auto bulk_error = '!';
+constexpr auto verbatim_string = '=';
+constexpr auto map = '%';
+constexpr auto attributes = '|';
+constexpr auto attributes_alt = '`';
+constexpr auto set = '~';
+constexpr auto push = '>';
 
 constexpr auto cr = '\r';
 constexpr auto lf = '\n';
